@@ -5,6 +5,7 @@ Repository for the Soil Organic Matter Synthesis working group
 ## Principal Investigators
 
 Will Wieder and Kate Lajtha
+
 Award Date: September 20, 2017
 
 ## Description
