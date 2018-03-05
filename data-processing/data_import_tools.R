@@ -2,6 +2,7 @@
 # Set of tools to import csv files into R
 #-----------------------------------------#
 # Julien Brun, NCEAS
+# SciComp@nceas.ucsb.edu
 
 
 #' Read file from Google Drive using the google id hash
