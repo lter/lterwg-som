@@ -18,12 +18,12 @@
 read.csv.gdrive <- function (file_id_gdrive, skipper = 0, gdrive_url = "https://drive.google.com/uc?export=download&id=")
 {
   download.link <- paste0(gdrive_url, file_id_gdrive)
-  data.table <- read.csv(file = download.link, header = T,
+  data.csv <- read.csv(file = download.link, header = T,
                          skip = skipper)
-  if (colnames(data.table)[[1]]== "X..DOCTYPE.html."){ data.table <- NULL
+  if (colnames(data.csv)[[1]]== "X..DOCTYPE.html."){ data.csv <- NULL
   print('could not retrieve CSV content')}
-  else {data.table}
-  return(data.table)
+  else {data.csv}
+  return(data.csv)
 }
 
 #' Read file from Google Drive using the google id hash using readr::read_csv
@@ -39,10 +39,10 @@ read.csv.gdrive <- function (file_id_gdrive, skipper = 0, gdrive_url = "https://
 read_csv_gdrive <- function (file_id_gdrive, skipper = 0, gdrive_url = "https://drive.google.com/uc?export=download&id=")
 {
   download.link <- paste0(gdrive_url, file_id_gdrive)
-  data.table <- read_csv(file = download.link, header = T,
+  data.csv <- read_csv(file = download.link, header = T,
                          skip = skipper)
-  if (colnames(data.table)[[1]]== "X..DOCTYPE.html."){ data.table <- NULL
+  if (colnames(data.csv)[[1]]== "X..DOCTYPE.html."){ data.csv <- NULL
   print('could not retrieve CSV content')}
-  else {data.table}
-  return(data.table)
+  else {data.csv}
+  return(data.csv)
 }
