@@ -66,7 +66,7 @@ data_homogonization <- function(directoryName) {
   names(data) <- dirFileNames 
   
   # isolate key-key and extract details in location and profile tabs
-  keyFileName <- grep("key", capFileNames, ignore.case = T, value = T)
+  keyFileName <- grep("key", dirFileNames, ignore.case = T, value = T)
   keyFileToken <- gs_title(keyFileName)
   
   locationData <- gs_read(keyFileToken, ws = 1) %>% 
