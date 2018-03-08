@@ -7,9 +7,11 @@ library(tidyverse)
 
 # todos and notes ----
 
-# check header_row, 1 if NA
-# for header_name to var consider rename_at, rename_all, or purrr::set_names
-# check out select(matches) if select_one poses a problem
+# check header_row, 1 if NA - done!
+# for header_name to var consider rename_at, rename_all, or purrr::set_names - done!
+# check out select(matches) if select_one poses a problem - done!
+# location data are being sorted alphabetically, not a huge problem but need to correct
+
 
 # generic function ----
 
@@ -69,7 +71,8 @@ data_homogonization <- function(directoryName) {
   keyFileToken <- gs_title(keyFileName)
   
   locationData <- gs_read(keyFileToken, ws = 1) %>% 
-    filter(!is.na(Value))
+    filter(!is.na(Value)) %>% 
+    add_row(Value = googleID, var = 'google_id', .before = 1)
   
   profileData <- gs_read(keyFileToken, ws = 2) %>% 
     filter(!is.na(header_name))
@@ -139,5 +142,20 @@ data_homogonization <- function(directoryName) {
     # map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", ., ".csv")))
   
   
+  # temp_som_hmgzd_output
 
+}
+
+
+tempToGoogleDrive <- function() {
+  
+  # identify directory with files (not full.names=T)
+  filesToUpload <- list.files(path="~/Desktop/temp_som_outspace/",
+                              full.names=F,
+                              recursive=FALSE)
+
+  filesToUpload %>% 
+    names(.)
+  drive_upload('event1513rsvps.csv', path = "temp_som_hmgzd_output/", name = "", type = "spreadsheet")
+  
 }
