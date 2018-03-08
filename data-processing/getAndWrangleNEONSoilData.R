@@ -297,20 +297,22 @@ sls_soilChem$acidTreatedforC <- ifelse(is.na(sls_soilChem$CNratio), "Y", "N")
 sls_soilChem$soilMoisture <- sls_moisture$soilMoisture[match(sls_soilChem$sampleID, sls_moisture$sampleID)]
 sls_soilChem$dryMassFraction <- sls_moisture$dryMassFraction[match(sls_soilChem$sampleID,  sls_moisture$sampleID)]
 # Add on pH vars
-sls_soilChem$soilInWaterpH <- sls_pH$soilInWaterpH[match(sls_soilChem$sampleID,  sls_pH$sampleID)]
-sls_soilChem$soilInCaClpH <- sls_pH$soilInCaClpH[match(sls_soilChem$sampleID,  sls_pH$sampleID)]
-sls_soilChem$waterpHRatio <- sls_pH$waterpHRatio[match(sls_soilChem$sampleID,  sls_pH$sampleID)]
+sls_soilChem$soilInWaterpH <- sls_pH$soilInWaterpH[match(sls_soilChem$sampleID, sls_pH$sampleID)]
+sls_soilChem$soilInCaClpH <- sls_pH$soilInCaClpH[match(sls_soilChem$sampleID, sls_pH$sampleID)]
+sls_soilChem$waterpHRatio <- sls_pH$waterpHRatio[match(sls_soilChem$sampleID, sls_pH$sampleID)]
+sls_soilChem$caclpHRatio <- sls_pH$caclpHRatio[match(sls_soilChem$sampleID, sls_pH$sampleID)]
 # Add on field collection metadata
 names(sls_soilChem)
 names(sls_CoreCollect)
 sls_all <- left_join(x = sls_soilChem, y = sls_CoreCollect, 
           by = c("domainID", "siteID", "plotID", "plotType","sampleID", "namedLocation", "collectDate"))
-# Add spatial (slope/aspect) - from NEON api
+# Add spatial (slope/aspect) and soil order - from NEON api
 sls_all$plotAspect <- sls_spatial$api.slopeAspect[match(sls_all$namedLocation, sls_spatial$namedLocation)]
 sls_all$plotSlope <- sls_spatial$api.slopeGradient[match(sls_all$namedLocation, sls_spatial$namedLocation)]
+sls_all$soilOrder <- sls_spatial$api.soilTypeOrder[match(sls_all$namedLocation, sls_spatial$namedLocation)]
 # Add climate (MAT/MAP) - from PRISM, mean of 30-yr normals for entire site
-sls_all$MAT_C <- MAT$Temp_C[match(sls_all$siteID.x,MAT$siteID)]
-sls_all$MAP_mm <- MAP$Precip_mm[match(sls_all$siteID.x,MAP$siteID)]
+sls_all$MAT_C <- MAT$Temp_C[match(sls_all$siteID,MAT$siteID)]
+sls_all$MAP_mm <- MAP$Precip_mm[match(sls_all$siteID,MAP$siteID)]
 # Remove non-relevant variables
 sls_all_clean <- subset(sls_all, select = -c(acidTreatment, analyticalRepNumber, 
 primaryKey, utmZone, northing, easting))
