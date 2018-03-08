@@ -125,15 +125,19 @@ data_homogonization <- function(directoryName) {
     spread(key = var, value = Value)
 
   # merge location data with each data frame
-  listCopy <- lapply(listCopy, function(frame) { merge(locationDataWide, frame, all = T) })
+  googleDirData <- lapply(googleDirData, function(frame) { merge(locationDataWide, frame, all = T) })
+  
+  # rename files to include base name + indication of homogenization 
+  names(googleDirData) <- paste0(str_extract(names(googleDirData), "^[^\\.]*"), "_HMGZD")
+  
+  # Data and file output 
+  
+  # write files to a temporary location
+  googleDirData %>%
+    names(.) %>%
+    map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", .)))
+    # map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", ., ".csv")))
   
   
-  
-  
-  # temporary returns for code development
-  return(list(locationData, 
-              profileData,
-              skipRows,
-              missingValueCode))
 
 }
