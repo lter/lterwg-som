@@ -3,8 +3,9 @@
 ### Feb 28th, 2018
 ### S. Weintraub
 
+# Add working directory for additional user as needed
 if (file.exists('/Users/sweintraub/')){
-  dir <- ("/Users/sweintraub/Documents/Conferences_Meetings/2018_LTER-SOM/rawData")
+  dir <- ("/Users/sweintraub/Documents/Conferences_Meetings/2018_LTER-SOM/data-files")
   setwd(dir)
 }
 
@@ -188,26 +189,35 @@ mgc_perbiogeo <- read.csv(paste
 mgp_perbiogeo <- read.csv(paste
                          (dir, "filesToStack00096/stackedFiles/mgp_perbiogeosample.csv", 
                           sep = "/"), header = T, stringsAsFactors = F)
+mgp_perbulksample <- read.csv(paste
+                         (dir, "filesToStack00096/stackedFiles/mgp_perbulksample.csv", 
+                         sep = "/"), header = T, stringsAsFactors = F)
 mgc_permegapit <- read.csv(paste
                           (dir, "filesToStack00096/stackedFiles/mgp_permegapit.csv", 
                           sep = "/"), header = T, stringsAsFactors = F)
 names(mgc_perbiogeo)
 names(mgp_perbiogeo)
-# Join chem to phys, by includes all common columns
+# Join chem to texture, by includes all common columns
 megpit_biogeo_1 <- left_join(x = mgc_perbiogeo, y = mgp_perbiogeo, 
       by = c("domainID", "siteID","pitNamedLocation","pitID", "horizonID", "biogeoID", "horizonName","biogeoHorizonProportion", 
              "biogeoSampleType", "setDate", "collectDate", "laboratoryName", 
              "labProjID", "biogeoTopDepth", "biogeoBottomDepth", "biogeoCenterDepth"))
-# Join both to pit-level metadata
+# Join both to bulk density, by includes all common columns
 names(megpit_biogeo_1)
+names(mgp_perbulksample)
+megpit_biogeo_2 <- left_join(x = megpit_biogeo_1, y = mgp_perbulksample, 
+      by = c("domainID", "siteID","pitNamedLocation","pitID", "horizonID", "horizonName",
+      "setDate", "collectDate", "laboratoryName", "labProjID"))
+# Join both to pit-level metadata
+names(megpit_biogeo_2)
 names(mgc_permegapit)
-megpit_biogeo_2 <- left_join(x = megpit_biogeo_1, y = mgc_permegapit, 
+megpit_biogeo_3 <- left_join(x = megpit_biogeo_2, y = mgc_permegapit, 
       by = c("domainID", "siteID","pitNamedLocation", "pitID", "setDate", "collectDate"))
 # Add climate - from PRISM, mean of 30-yr normals for entire site
-megpit_biogeo_2$MAT_C <- MAT$Temp_C[match(megpit_biogeo_2$siteID,MAT$siteID)]
-megpit_biogeo_2$MAP_mm <- MAP$Precip_mm[match(megpit_biogeo_2$siteID,MAP$siteID)]
+megpit_biogeo_3$MAT_C <- MAT$Temp_C[match(megpit_biogeo_3$siteID,MAT$siteID)]
+megpit_biogeo_3$MAP_mm <- MAP$Precip_mm[match(megpit_biogeo_3$siteID,MAP$siteID)]
 # Write the file, customize path
-write.csv(megpit_biogeo_2, '/Users/sweintraub/Documents/Conferences_Meetings/2018_LTER-SOM/megapit_all.csv', row.names = F)
+write.csv(megpit_biogeo_3, '/Users/sweintraub/Documents/Conferences_Meetings/2018_LTER-SOM/megapit_all.csv', row.names = F)
 
 ### Initital Characterization - start with chemistry (perbiogeo), then add on physical (bd, texture) + other
 spc_perbiogeo <- read.csv(paste
