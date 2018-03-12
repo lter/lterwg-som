@@ -11,6 +11,9 @@ library(tidyverse)
 # for header_name to var consider rename_at, rename_all, or purrr::set_names - done!
 # check out select(matches) if select_one poses a problem - done!
 # location data are being sorted alphabetically, not a huge problem but need to correct
+# warnings to file
+# on-run warns for: 
+  # multiple header_names of same name
 
 
 # generic function ----
@@ -138,8 +141,8 @@ data_homogonization <- function(directoryName) {
   # write files to a temporary location
   googleDirData %>%
     names(.) %>%
-    map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", .)))
-    # map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", ., ".csv")))
+    # map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", .)))
+    map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", ., ".csv")))
   
   
   # temp_som_hmgzd_output
