@@ -12,7 +12,7 @@ if (file.exists('/Users/sweintraub/')){
 ### OPTION 1: NEON Data Stacker (neonDataStackR)
 # library(devtools) # load devtools if needed
 # install_github("NEONScience/NEON-utilities/neonDataStackR", dependencies=TRUE) # install package if needed
-library (neonDataStackR) # load package
+library(neonDataStackR) # load package
 # download all data for a given product, then unzip and stack by table
 # Soil physical properties (Megapit), DP1.00096.001
 {
@@ -99,7 +99,7 @@ soilProds
 }  
 # Soil chemical properties (Distributed initial characterization), DP1.10008.001
 {
-  zipsByProduct(dpID="DP1.10008.001", site="all", package="basic", check.size=T)
+  zipsByProduct(dpID="DP1.10008.001", site="all", package="expanded", check.size=T)
   stackByTable(paste0(getwd(), "/filesToStack10008"), folder=T)
 }  
 # Soil physical properties (Distributed initial characterization), DP1.10047.001
