@@ -25,7 +25,7 @@ eml_name <- "data-processing/knb-lter-knz.47.7.xml"
 
 categorical_frequency <- function(df){
   # Select the character columns
-  cat_data <- Filter(is.character, site_data)
+  cat_data <- Filter(is.character, df)
   # compute the unique values and frequencies
   cat_freq_list <- map(cat_data, janitor::tabyl)
   # Create a data frame out of that
@@ -46,7 +46,3 @@ site_data <- read_csv(file_name)
 
 # Some data exploration
 cat_freq <- categorical_frequency(site_data)
-
-cat_data <- Filter(is.character, site_data)
-cat_freq_list <- map(cat_data, janitor::tabyl)
-cat_freq <- bind_rows(cat_freq_list, .id = "attribute")
