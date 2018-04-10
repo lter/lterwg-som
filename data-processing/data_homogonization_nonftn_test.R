@@ -5,7 +5,7 @@ library(googlesheets)
 library(tidyverse)
 
 getwd()
-setwd("C:/Users/Derek/Google Drive/Code/GitHub/lterwg-som/R files")
+setwd("C:/Users/Derek Pierson/Google Drive/Code/GitHub/lterwg-som/R files")
 
 # todos and notes ----
 
@@ -58,7 +58,7 @@ batch_load <- function(fileName, skipRows, missingValueCode) {
  
 #FINDING KEY KEY FILE                                   
 ###################                  
-#CURRENTLY STARTING WITH FOLDER NAME TO FIND THE KEY KEY FILE
+  #CURRENTLY STARTING WITH FOLDER NAME TO FIND THE KEY KEY FILE
   
   # access Google directory id for reference
   googleID <- drive_get(directoryName) %>% 
@@ -87,8 +87,10 @@ batch_load <- function(fileName, skipRows, missingValueCode) {
   
 #Read in the profile data from key key  
   profileData <- gs_read(keyFileToken, ws = 2) %>% 
-    filter(!is.na(header_name))
-  
+    filter(!is.na(header_name))  #<- Only pulls data vars if specified, blank vars removed
+
+#READ DATA FILES
+###########################  
   
 #Find and set number of rows to skip at top of data file  
   # isolate rows to skip from locationData for data import      # <-- We're getting the 'header_row' value twice, since it's in the sheet twice, Ok?
@@ -111,11 +113,10 @@ batch_load <- function(fileName, skipRows, missingValueCode) {
   if (exists('mvc2')) { missingValueCode = mvc2}
   if (exists('mvc1') && exists('mvc2')) { missingValueCode = c(paste(mvc1, mvc2))}
 
-  
-#READ DATA FILES
-###########################
+
   
   # import all (data + key) files from google dir
+  #Uses batch_load function
   googleDirData <- lapply(dirFileNames, 
                           batch_load, 
                           missingValueCode = missingValueCode,
@@ -134,13 +135,21 @@ batch_load <- function(fileName, skipRows, missingValueCode) {
     pull()
 
   # pull targeted vars from each data frame based on header_names in key file
-  googleDirData <- map(googleDirData, select, one_of(varsToKeep))
+  googleDirData <- map(googleDirData, select, one_of(varsToKeep))  # <- Spits a warning for non-matching vars 
   
   # rename investigator names to key file names
-  googleDirData <- lapply(googleDirData, function(frame) { setNames(frame, profileData$var[match(names(frame), profileData$header_name)]) })
+    #??? DNP not sure whate happens here...
+  googleDirData <- lapply(googleDirData, function(frame) { 
+    setNames(frame, profileData$var[match(names(frame), profileData$header_name)]) })
   
   # generate wide data frame of location data
-  locationDataWide <- locationData %>% 
+  
+  ###DNP FIX FOR DUPLICATE 'header row' row in locationDataWide
+      #I think we can just cut out the second 'header row' since we already brought in the value above
+      locationData <- locationData[!duplicated(locationData$var),]
+        #If !duplicated doesn't work, just cut by row #, or name...etc.
+  
+  locationDataWide <- locationData %>%   # <-- Spits error since 'header row' is in there twice
     select(var, Value) %>% 
     spread(key = var, value = Value)
 
@@ -150,18 +159,20 @@ batch_load <- function(fileName, skipRows, missingValueCode) {
   # rename files to include base name + indication of homogenization 
   names(googleDirData) <- paste0(str_extract(names(googleDirData), "^[^\\.]*"), "_HMGZD")
   
-  # Data and file output 
+#EXPORT HMGZD DATA FILE
+###########################
   
   # write files to a temporary location
   googleDirData %>%
     names(.) %>%
     # map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", .)))
-    map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", ., ".csv")))
+    map(~ write_csv(googleDirData[[.]], paste0( ., ".csv")))
   
   
   # temp_som_hmgzd_output
 
-}
+### DNP removed end bracket to test as non-ftn
+#}
 
 
 tempToGoogleDrive <- function() {
