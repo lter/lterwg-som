@@ -1,0 +1,105 @@
+# libraries
+library(googledrive)
+library(googlesheets)
+library(tidyverse)
+getwd()
+setwd("C:/Users/Derek Pierson/Google Drive/Code/GitHub/lterwg-som/R files")
+install.packages(c("googledrive", "googlesheets"))
+library(googledrive)
+library(googlesheets)
+directoryName <- "UMBS_DIRT_Bulk_Den_2004_2009"
+# access Google directory id for reference
+googleID <- drive_get(directoryName) %>%
+pull(id)
+googleID <- drive_get(directoryName) %>%
+pull(id)
+dirFileList <- drive_ls(path = directoryName)
+dirFileNames <- dirFileList %>%
+select(name) %>%
+pull(name)
+dirFileNames
+keyFileName <- grep("key", dirFileNames, ignore.case = T, value = T)
+keyFileToken <- gs_title(keyFileName)  #<--Could we start here if we had list of key file names?
+install.packages("httpuv")
+keyFileToken
+locationData <- gs_read(keyFileToken, ws = 1) %>%
+filter(!is.na(Value)) %>%
+add_row(Value = googleID, var = 'google_id', .before = 1)
+View(locationData)
+profileData <- gs_read(keyFileToken, ws = 2) %>%
+filter(!is.na(header_name))
+#Find and set number of rows to skip at top of data file
+# isolate rows to skip from locationData for data import      # <-- We're getting the 'header_row' value twice, since it's in the sheet twice, Ok?
+if(length(locationData[locationData$var == 'header_row',]$var) == 1) {
+skipRows = locationData[locationData$var == 'header_row',]$Value
+} else {
+skipRows = 0
+}
+#Find and set missing value codes
+# isolate missing value codes from locationData for data import
+if (length(locationData[locationData$var == 'NA_1',]$var) == 1) {
+mvc1 = locationData[locationData$var == 'NA_1',]$Value }
+if (length(locationData[locationData$var == 'NA_2',]$var) == 1) {
+mvc2 = locationData[locationData$var == 'NA_2',]$Value }
+missingValueCode = "NA"
+if (exists('mvc1')) { missingValueCode = mvc1}
+if (exists('mvc2')) { missingValueCode = mvc2}
+if (exists('mvc1') && exists('mvc2')) { missingValueCode = c(paste(mvc1, mvc2))}
+# import all (data + key) files from google dir
+googleDirData <- lapply(dirFileNames,
+batch_load,
+missingValueCode = missingValueCode,
+skipRows = skipRows)
+# batch googlesheets file ingestion function
+batch_load <- function(fileName, skipRows, missingValueCode) {
+token <- gs_title(fileName)
+dataFile <- gs_read(token, skip = skipRows, na = missingValueCode)
+}
+googleDirData <- lapply(dirFileNames,
+batch_load,
+missingValueCode = missingValueCode,
+skipRows = skipRows)
+googleDirData
+names(googleDirData) <- dirFileNames
+dirFileNames
+googleDirData <- googleDirData[-grepl("key", names(googleDirData), ignore.case = T)]
+varsToKeep <- profileData %>%
+select(header_name) %>%
+pull()
+varsToKeep
+googleDirData <- map(googleDirData, select, one_of(varsToKeep))
+googleDirData
+googleDirData <- map(googleDirData, select, one_of(varsToKeep))
+googleDirData
+googleDirData
+googleDirData <- lapply(googleDirData, function(frame) {
+setNames(frame, profileData$var[match(names(frame), profileData$header_name)]) })
+googleDirData
+locationData
+locationDataWide <- locationData %>%
+select(var, Value) %>%
+spread(key = var, value = Value)
+View(locationData)
+locationDataWide
+View(locationData)
+locationData.test <- locationData[!duplicated(locationData$var),]
+View(locationData.test)
+###DNP FIX FOR DUPLICATE 'header row' row in locationDataWide
+#I think we can just cut out the second 'header row' since we already brought in the value above
+locationData <- locationData[!duplicated(locationData$var),]
+#If !duplicated doesn't work, just cut by row #, or name...etc.
+locationDataWide <- locationData %>%   # <-- Spits error since 'header row' is in there twice
+select(var, Value) %>%
+spread(key = var, value = Value)
+View(locationDataWide)
+# merge location data with each data frame
+googleDirData <- lapply(googleDirData, function(frame) { merge(locationDataWide, frame, all = T) })
+frame
+googleDirData
+names(googleDirData) <- paste0(str_extract(names(googleDirData), "^[^\\.]*"), "_HMGZD")
+googleDirData %>%
+names(.)
+googleDirData %>%
+names(.) %>%
+# map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", .)))
+map(~ write_csv(googleDirData[[.]], paste0( ., ".csv")))
