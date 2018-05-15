@@ -15,9 +15,6 @@ library(tidyverse)
 # on-run warns for: 
   # multiple header_names of same name
 
-#Derek's notes
-  #5-14-18: There's a bug in the header row names.
-
 
 # generic function ----
 
@@ -53,14 +50,9 @@ batch_load <- function(fileName, skipRows, missingValueCode) {
 }
 
 
-#DEBUG input folders
-#dbg.folders <- c('AND_10YR_CN','AND_10YR_DenseFrac','AND_15YR_CN')
-
-
 data_homogonization <- function(directoryName) {
   
-  #DEBUG line for stepping through a specific folder
-  #directoryName <- dbg.folders[2]
+  # Google Drive directory
   
   # access Google directory id for reference
   googleID <- drive_get(directoryName) %>% 
@@ -90,7 +82,7 @@ data_homogonization <- function(directoryName) {
   
   # isolate rows to skip from locationData for data import
   if(length(locationData[locationData$var == 'header_row',]$var) == 1) { 
-    skipRows = as.numeric(locationData[locationData$var == 'header_row',]$Value)-1
+    skipRows = locationData[locationData$var == 'header_row',]$Value
   } else {
     skipRows = 0
   }
@@ -121,16 +113,6 @@ data_homogonization <- function(directoryName) {
   # as key file is already loaded, remove it from the list of data frames 
   googleDirData <- googleDirData[-grepl("key", names(googleDirData), ignore.case = T)]
 
-  ### Remove duplicate files, for some reason I lose the filename if I do this any other way than an if else
-  if(length(googleDirData) > 1 | length(unique(googleDirData)) == 1) {
-    file.nm <- names(googleDirData[1])
-    googleDirData <- googleDirData[1]
-    names(googleDirData) <- file.nm
-  } else {
-    print("Multiple File Error)")
-  }
-  
-  
   # generate a vector of dataframe columns to keep from key file input to
   # header_name
   varsToKeep <- profileData %>% 
@@ -143,10 +125,6 @@ data_homogonization <- function(directoryName) {
   # rename investigator names to key file names
   googleDirData <- lapply(googleDirData, function(frame) { setNames(frame, profileData$var[match(names(frame), profileData$header_name)]) })
   
-  #Cut out second 'header row'
-  #NOTE: Maybe we should do this more carefully?
-  locationData <- locationData[!duplicated(locationData$var),]
-  
   # generate wide data frame of location data
   locationDataWide <- locationData %>% 
     select(var, Value) %>% 
@@ -158,41 +136,19 @@ data_homogonization <- function(directoryName) {
   # rename files to include base name + indication of homogenization 
   names(googleDirData) <- paste0(str_extract(names(googleDirData), "^[^\\.]*"), "_HMGZD")
   
-  #Notes
-  #Grab location data references and notes
-  loc.notes <- locationData %>% mutate_all(as.character) %>% filter(!is.na(var_notes)) %>% select(-Value, -Unit)
+  # Data and file output 
   
-  #Grab profile data notes and comments
-  prof.notes <- profileData %>% filter(!is.na(Notes) | !is.na(Comment)) %>% select(Var_long,var,Level,Notes,Comment) %>% rename(var_notes=Notes)
-  
-  #Merge notes
-  notes <- full_join(loc.notes,prof.notes)
-  
-  #Add filename and site code
-  notes$File <- names(googleDirData)
-  notes$Site <- locationData$Value[16]
-  
-  #Arrange filename first
-  notes <- notes %>% select(File, Site, everything())
-  
-  
-  #Data and file output 
-  #This is person specific for now...
-  
-  #Stevan
   # write files to a temporary location
   googleDirData %>%
     names(.) %>%
     # map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", .)))
     map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", ., ".csv")))
- 
-  #Derek 
-  write.csv(googleDirData[1], paste0(names(googleDirData),".csv"))
-  write.csv(notes, paste0(names(googleDirData),"_NOTES.csv"))
+  
+  
+  # temp_som_hmgzd_output
+
 }
 
-
-#HAVEN'T TESTED GD UPLOAD YET, DPierson 05-14-2018
 
 tempToGoogleDrive <- function() {
   
