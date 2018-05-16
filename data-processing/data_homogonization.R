@@ -4,7 +4,6 @@ library(googledrive)
 library(googlesheets)
 library(tidyverse)
 
-
 # todos and notes ----
 
 # check header_row, 1 if NA - done!
@@ -53,14 +52,10 @@ batch_load <- function(fileName, skipRows, missingValueCode) {
 }
 
 
-#DEBUG input folders
-#dbg.folders <- c('AND_10YR_CN','AND_10YR_DenseFrac','AND_15YR_CN')
-
-
 data_homogonization <- function(directoryName) {
   
-  #DEBUG line for stepping through a specific folder
-  #directoryName <- dbg.folders[2]
+  ###DEBUG line for stepping through a specific folder
+  #directoryName <- 'Calhoun'
   
   # access Google directory id for reference
   googleID <- drive_get(directoryName) %>% 
@@ -79,7 +74,7 @@ data_homogonization <- function(directoryName) {
   
   # isolate key-key and extract details in location and profile tabs
   keyFileName <- grep("key", dirFileNames, ignore.case = T, value = T)
-  keyFileToken <- gs_title(keyFileName)
+  keyFileToken <- gs_title(keyFileName[1])
   
   locationData <- gs_read(keyFileToken, ws = 1) %>% 
     filter(!is.na(Value)) %>% 
@@ -119,9 +114,13 @@ data_homogonization <- function(directoryName) {
   names(googleDirData) <- dirFileNames
   
   # as key file is already loaded, remove it from the list of data frames 
-  googleDirData <- googleDirData[-grepl("key", names(googleDirData), ignore.case = T)]
+  googleDirData <- googleDirData[!grepl("key", names(googleDirData), ignore.case = T)]
+  
+  ###Add'next' if HMGZD files exist
 
-  ### Remove duplicate files, for some reason I lose the filename if I do this any other way than an if else
+  # Remove duplicate data csv files
+    #For some reason I lose the filename if I do this any other way than ifelse...
+  
   if(length(googleDirData) > 1 | length(unique(googleDirData)) == 1) {
     file.nm <- names(googleDirData[1])
     googleDirData <- googleDirData[1]
@@ -181,28 +180,31 @@ data_homogonization <- function(directoryName) {
   
   #Stevan
   # write files to a temporary location
-  googleDirData %>%
-    names(.) %>%
+  #googleDirData %>%
+    #names(.) %>%
     # map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", .)))
-    map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", ., ".csv")))
+    #map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", ., ".csv")))
  
-  #Derek 
-  write.csv(googleDirData[1], paste0(names(googleDirData),".csv"))
-  write.csv(notes, paste0(names(googleDirData),"_NOTES.csv"))
+  #Derek
+  #Save local copy of homog data products
+    #For future universal use, convert this section to use getwd()
+  local.wd <- "C:/Users/Derek Pierson/Google Drive/Code/SOM_temp/" 
+  write.csv(googleDirData[[1]], paste0(local.wd,names(googleDirData[1]),".csv"), row.names=FALSE)
+  write.csv(notes, paste0(local.wd,names(googleDirData),"_NOTES.csv"), row.names=FALSE)
+  
+  #Upload files to Google Drive data folder
+  drive_upload(paste0(local.wd,names(googleDirData[1]),".csv"), path = directoryName, name = names(googleDirData[1]), type = "spreadsheet")
+  drive_upload(paste0(local.wd,names(googleDirData),"_NOTES.csv"), path = directoryName, name = paste0(names(googleDirData[1]),"_NOTES"), type = "spreadsheet")
 }
 
 
-#HAVEN'T TESTED GD UPLOAD YET, DPierson 05-14-2018
+#Trial runs of data_homog function
 
-tempToGoogleDrive <- function() {
-  
-  # identify directory with files (not full.names=T)
-  filesToUpload <- list.files(path="~/Desktop/temp_som_outspace/",
-                              full.names=F,
-                              recursive=FALSE)
+#Complete!
+#data_homogonization("AND_10YR_CN") 
+#data_homogonization("AND_10YR_DenseFrac")
+#data_homogonization("AND_15YR_CN")
 
-  filesToUpload %>% 
-    names(.)
-  drive_upload('event1513rsvps.csv', path = "temp_som_hmgzd_output/", name = "", type = "spreadsheet")
-  
-}
+data_homogonization("Calhoun")
+
+
