@@ -70,6 +70,7 @@ data_homogonization <- function(directoryName) {
   dirFileList <- drive_ls(path = directoryName) 
   
   # isolate names from Google directory 
+  # REPLY: could purge duplicates here but is that wise - maybe this should be done manually?
   dirFileNames <- dirFileList %>% 
     select(name) %>% 
     pull(name)
@@ -122,6 +123,8 @@ data_homogonization <- function(directoryName) {
   googleDirData <- googleDirData[-grepl("key", names(googleDirData), ignore.case = T)]
 
   ### Remove duplicate files, for some reason I lose the filename if I do this any other way than an if else
+  # REPLY: I think it is too late here, this may have to be done at the 'dirFileList' stage
+  # why just the first entity?
   if(length(googleDirData) > 1 | length(unique(googleDirData)) == 1) {
     file.nm <- names(googleDirData[1])
     googleDirData <- googleDirData[1]
@@ -169,7 +172,9 @@ data_homogonization <- function(directoryName) {
   notes <- full_join(loc.notes,prof.notes)
   
   #Add filename and site code
+  # getting errors with notes$File
   notes$File <- names(googleDirData)
+  # why hard-code [16]?
   notes$Site <- locationData$Value[16]
   
   #Arrange filename first
