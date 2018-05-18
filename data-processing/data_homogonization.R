@@ -81,7 +81,7 @@ data_homogonization <- function(directoryName, temporaryDirectory) {
     file.remove(file.path(temporaryDirectory, list.files(temporaryDirectory))) 
   }
   
-   
+  
   # GOOGLE DRIVE DIRECTORY
   
   # access Google directory id for reference
@@ -110,16 +110,13 @@ data_homogonization <- function(directoryName, temporaryDirectory) {
   profileData <- gs_read(keyFileToken, ws = 2) %>% 
     filter(!is.na(header_name))
   
-  # generate a note file from the key file
   
-
-  # GENERATE NOTE FILE
+  # GENERATE NOTE FILE (FROM THE KEY FILE)
   
   # create a note name with path to output directory, name of key file + _HMGZD_NOTES.csv
-  # notesFileName <- paste0(temporaryDirectory, file_path_sans_ext(keyFileName), "_HMGZD_NOTES.csv")
   notesFileName <- paste0(file_path_sans_ext(keyFileName), "_HMGZD_NOTES.csv")
   
-  # capture notes from location and profile key-file tabs and write to file
+  # capture notes from location and profile key-file tabs
   notes <- bind_rows(
     locationData %>% 
       filter(!is.na(var_notes)) %>% 
@@ -131,19 +128,50 @@ data_homogonization <- function(directoryName, temporaryDirectory) {
       mutate(source = "profile") %>% 
       select(source, Var_long, var, var_notes)
   )
- 
-   
+  
+  
+  # +++++++++++++++++++++++++++++++++++++++
+  # BEGIN STANDARDIZE UNITS::location data
+  # source('~/Dropbox/development/standardize_units_location.R')
+  
+  # location tab DATA containing units only
+  locationDataUnits <- locationData %>% 
+    filter(!is.na(Unit)) %>% 
+    select(Value, unit_levels = Unit, Var_long, var)
+  
+  # join location DATA with units and corresponding vars in conversion table
+  LDU_UCL <- left_join(locationDataUnits, unitsConversionLocation,
+                       by = c("var", "unit_levels"),
+                       suffix = c(".PD", ".UT")) %>% 
+    filter(
+      !is.na(unitConversionFactor),
+      unitConversionFactor != 1
+    )
+  
+  # standardize location data units
+  for (varValue in c(LDU_UCL$var)) {
+    
+    # standardize values per the units_conversion_table
+    locationData[locationData$var == varValue,]['Value'] <- as.numeric(locationData[locationData$var == varValue,]['Value']) * LDU_UCL[LDU_UCL$var == varValue,]['unitConversionFactor']
+    
+    # add mention of conversions to notes
+    if (nrow(notes[notes$var == varValue,]) >= 1) {
+      notes <- notes %>% 
+        mutate(var_notes = replace(var_notes,
+                                   var == varValue,
+                                   paste0(var_notes, "; UNITS CONVERSION APPLIED: ", LDU_UCL[LDU_UCL$var == varValue,]['unitConversionFactor'])))
+    } else {
+      notes <- notes %>% 
+        add_row(source = 'location',
+                var = varValue,
+                var_notes = paste0("UNITS CONVERSION APPLIED: ", LDU_UCL[LDU_UCL$var == varValue,]['unitConversionFactor']))
+    }
+  }
+  
+  # END STANDARDIZE UNITS::location data
   # +++++++++++++++++++++++++++++++++++++++
   
-  # UNITS: location
   
-  # standardize units of location-level data  
-  # standardize_units_location()
-  source('~/Dropbox/development/standardize_units_location.R')
-   
-  # +++++++++++++++++++++++++++++++++++++++
- 
-   
   # IMPORT DATA
   
   # set import parameters
@@ -167,7 +195,7 @@ data_homogonization <- function(directoryName, temporaryDirectory) {
   if (exists('mvc1')) { missingValueCode = mvc1}
   if (exists('mvc2')) { missingValueCode = mvc2}
   if (exists('mvc1') && exists('mvc2')) { missingValueCode = c(paste(mvc1, mvc2))}
-
+  
   
   # DATA FILE(S)
   
@@ -182,13 +210,13 @@ data_homogonization <- function(directoryName, temporaryDirectory) {
   
   # as key file is already loaded, remove it from the list of data frames 
   googleDirData <- googleDirData[-grepl("key", names(googleDirData), ignore.case = T)]
-
+  
   # generate a vector of dataframe columns to keep from key file input to
   # header_name
   varsToKeep <- profileData %>% 
     select(header_name) %>% 
     pull()
-
+  
   # pull targeted vars from each data frame based on header_names in key file
   googleDirData <- map(googleDirData, select, one_of(varsToKeep))
   
@@ -196,21 +224,65 @@ data_homogonization <- function(directoryName, temporaryDirectory) {
   googleDirData <- lapply(googleDirData, function(frame) { 
     setNames(frame, profileData$var[match(names(frame), profileData$header_name)]) })
   
+  
   # +++++++++++++++++++++++++++++++++++++++
+  # BEGIN STANDARDIZE UNITS::profile data
+  # source('~/Dropbox/development/standardize_units_profile.R')
   
-  # UNITS: profile
+  # profile tab DATA containing units only
+  profileDataUnits <- profileData %>% 
+    filter(!is.na(unit_levels)) %>% 
+    select(header_name, unit_levels, Var_long, var)
   
-  # standardize units of profile-level data  
-  # standardize_units_profile()
-  source('~/Dropbox/development/standardize_units_profile.R')
+  # join profile DATA with units and corresponding vars in conversion table
+  PDU_UCP <- left_join(profileDataUnits, unitsConversionProfile,
+                       by = c("var", "unit_levels"),
+                       suffix = c(".PD", ".UT")) %>% 
+    filter(
+      !is.na(unitConversionFactor),
+      unitConversionFactor != 1
+    )
   
+  # loop through all data frames in google dir
+  for (i in 1:length(googleDirData)) {
+    
+    for (dataCol in c(PDU_UCP$var)) {
+      
+      if (!is.null(googleDirData[[i]][[dataCol]])) {
+        
+        googleDirData[[i]][[dataCol]] <- googleDirData[[i]][[dataCol]] * PDU_UCP[PDU_UCP$var == dataCol,][['unitConversionFactor']]
+        
+        # add mention of conversions to notes
+        if (nrow(notes[notes$var == dataCol,]) >= 1) {
+          print(paste("mutate: ", dataCol))
+          
+          baseNote <- notes %>%
+            filter(var == dataCol) %>% 
+            select(var_notes)
+          
+          notes <- notes %>%
+            mutate(var_notes = replace(var_notes,
+                                       var == dataCol,
+                                       paste0(baseNote, "; UNITS CONVERSION APPLIED: ", PDU_UCP[PDU_UCP$var == dataCol,]['unitConversionFactor'])))
+        } else {
+          print(paste("add_row ", dataCol))
+          notes <- notes %>%
+            add_row(source = 'profile',
+                    var = dataCol,
+                    var_notes = paste0("UNITS CONVERSION APPLIED: ", PDU_UCP[PDU_UCP$var == dataCol,]['unitConversionFactor']))
+        }
+      }
+    }
+  }
+  
+  # END STANDARDIZE UNITS::profile data
   # +++++++++++++++++++++++++++++++++++++++
   
   # generate wide data frame of location data
   locationDataWide <- locationData %>% 
     select(var, Value) %>% 
     spread(key = var, value = Value)
-
+  
   # merge location data with each data frame
   googleDirData <- lapply(googleDirData, function(frame) { 
     merge(locationDataWide, frame, all = T) })
@@ -229,7 +301,7 @@ data_homogonization <- function(directoryName, temporaryDirectory) {
     names(.) %>%
     # map(~ write_csv(googleDirData[[.]], paste0("~/Desktop/temp_som_outspace/", .)))
     map(~ write_csv(googleDirData[[.]], paste0(temporaryDirectory, ., ".csv")))
-
+  
 }
 
 
