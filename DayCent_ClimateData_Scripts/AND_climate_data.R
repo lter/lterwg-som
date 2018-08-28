@@ -100,11 +100,15 @@ summary(AND_processed)
 sample_n(AND_processed, 50)
 
 #---write CSV 
+
+ProcessedData_folder <-  "./Climate_data_processed/"
+dir.create(path = ProcessedData_folder, showWarnings = F) #returns true/false
+
 write.csv(AND_processed,
-          file = file.path("./Climate_data_processed/", "AND_processed.csv"),
+          file = file.path(ProcessedData_folder, "AND_processed.csv"),
           na = "-99.9", row.names = F)
 
-  # if want specific folders
+# if want specific folders
 
   # write.csv(AND_processed,
   #         file = file.path("./AND_climate_data/", "AND_processed.csv"),

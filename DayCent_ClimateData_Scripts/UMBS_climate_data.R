@@ -81,9 +81,14 @@ summary(UMBS_processed)
 # sample_n(UMBS_processed, 50)
 
 #---write CSV 
-write.csv(UMBS_processed, file = file.path("./Climate_data_processed/", "UMBS_processed.csv"),
+
+ProcessedData_folder <-  "./Climate_data_processed/"
+dir.create(path = ProcessedData_folder, showWarnings = F) #returns true/false
+
+write.csv(UMBS_processed,
+          file = file.path(ProcessedData_folder, "UMBS_processed.csv"),
           na = "-99.9", row.names = F)
 
 # if want site-specific specific folders
-write.csv(UMBS_processed, file = file.path("./UMBS_DIRT_Climate_Data/", "UMBS_processed.csv"),
-          na = "-99.9", row.names = F)
+# write.csv(UMBS_processed, file = file.path("./UMBS_DIRT_Climate_Data/", "UMBS_processed.csv"),
+#           na = "-99.9", row.names = F)

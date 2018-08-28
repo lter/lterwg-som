@@ -103,12 +103,16 @@ sample_n(CDR_processed, 50)
 # sample_n(CDR_processed, 50)
 
 #---write_csv
-write.csv(CDR_processed,
-          file = file.path("./Climate_data_processed/", "CDR_processed.csv"),
-          na = "-99.9", row.names = F)
 
-# if want site-specific specific folders
+ProcessedData_folder <-  "./Climate_data_processed/"
+  dir.create(path = ProcessedData_folder, showWarnings = F)
+
+write.csv(CDR_processed,
+          file = file.path(ProcessedData_folder, "CDR_processed.csv"),
+          na = "-99.9")
+
+# If want site-specific specific folders
 # write.csv(CDR_processed,
-#           file = file.path("./CDR_Climate_Data/", "CDR_processed.csv"),
+#           file = file.path("./CDR_Climate_Data/"),
 #           na = "-99.9", row.names = F)
   

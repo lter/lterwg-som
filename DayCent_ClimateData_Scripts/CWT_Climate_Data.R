@@ -24,9 +24,7 @@
 
 #---libraries
 library(googledrive)
-library(purrr)
 library(dplyr)
-library(readxl)
 library(tidyverse)
 library(stringr)
 library(lubridate)
@@ -86,7 +84,12 @@ summary(CWT_processed)
 
 
 #---write-------------
-write.csv(CWT_processed, file = file.path("./Climate_data_processed/", "CWT_processed.csv"),
+
+ProcessedData_folder <-  "./Climate_data_processed/"
+dir.create(path = ProcessedData_folder, showWarnings = F) #returns true/false
+
+write.csv(CWT_processed,
+          file = file.path(ProcessedData_folder, "CWT_processed.csv"),
           na = "-99.9", row.names = F)
 
 # if want site-specific specific folders
