@@ -1,29 +1,53 @@
+
+# README ------------------------------------------------------------------
+
+
+# libraries ---------------------------------------------------------------
+
 library(tools)
 library(googlesheets)
+library(googledrive)
+library(tidyverse)
+library(sqldf)
 
-myDrive <- gs_ls()
 
-duplicateFiles <- myDrive %>%
-  filter(grepl("HMGZD", sheet_title)) %>% 
-  filter(!grepl("HMGZD_NOTES", sheet_title)) %>% # cull notes for now
-  group_by(sheet_title) %>% 
-  summarise(
-    numberFiles = n()
-  ) %>% 
-  filter(numberFiles >= 2)
+# options -----------------------------------------------------------------
 
+options(httr_oob_default=TRUE) # create out-of-band oauth token in server env
+
+
+# load resources ----------------------------------------------------------
+
+source(here::here("localRepos", "lterwg-som", "data-processing", "sheet_download.R"))
+
+
+# identify files to harvest -----------------------------------------------
+
+myDrive <- gs_ls() # file inventory
+
+# harvest names of homogenized data files
 homogenizedDataFileNames <- myDrive %>%
-  filter(grepl("HMGZD", sheet_title)) %>% 
-  filter(!grepl("HMGZD_NOTES", sheet_title)) %>% # cull notes for now
+  filter(grepl("HMGZD", sheet_title)) %>% # hmgzd files only 
+  filter(!grepl("HMGZD_NOTES", sheet_title)) %>% # cull notes
   select(sheet_title) %>% 
-  distinct(sheet_title) %>% # removing duplicateFiles may obfuscate the need for this
+  # distinct(sheet_title) %>%
   mutate(
     baseName = file_path_sans_ext(sheet_title),
     extension = file_ext(sheet_title),
     extension = replace(extension, extension == "", NA)
   ) 
 
+# identify duplicates. these can be addressed manually in Google Drive.
+# Alternatively, duplicates will be ignored in the download but the user will
+# not have control over the file(s) downloaded.
+homogenizedDataFileNames %>%
+  group_by(baseName) %>% 
+  summarise(
+    numberFiles = n()
+  ) %>% 
+  filter(numberFiles >= 2)
 
+# vector of the names of UNIQUE homogenized data files
 uniqueHomogenizedDataFileNames <- sqldf('
 SELECT
   hdfn.sheet_title,
@@ -68,15 +92,14 @@ ORDER BY hdfn.sheet_title
   select(sheet_title) %>% 
   pull(sheet_title) 
 
-sheet_download <- function(fileName) {
-  
-  token <- googlesheets::gs_title(fileName)
-  
-  dataFile <- googlesheets::gs_read(token)
-  
-}
+
+# harvest data ------------------------------------------------------------
 
 homogenizedData <- lapply(uniqueHomogenizedDataFileNames, sheet_download)
+
+format(object.size(homogenizedData), units = "Mb")
+
+lapply(homogenizedData, function(dataFrame) { if ("lat" %in% colnames(dataFrame)) { dataFrame %>% mutate(lat = as.character(lat)) } })
 
 asCharacter <- lapply(homogenizedData, function(dataFrame) { dataFrame %>% mutate_all(as.character) })
 
