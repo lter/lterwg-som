@@ -9,6 +9,7 @@ library(googlesheets)
 library(googledrive)
 library(tidyverse)
 library(sqldf)
+library(lubridate)
 
 
 # options -----------------------------------------------------------------
@@ -18,6 +19,7 @@ options(httr_oob_default=TRUE) # create out-of-band oauth token in server env
 
 # load resources ----------------------------------------------------------
 
+# Google Sheet download script
 source(here::here("localRepos", "lterwg-som", "data-processing", "sheet_download.R"))
 
 
@@ -95,68 +97,123 @@ ORDER BY hdfn.sheet_title
 
 # harvest data ------------------------------------------------------------
 
+# use the sheet_download script to harvest all of the (unique) homogenized data
+# files from Google Drive
 homogenizedData <- lapply(uniqueHomogenizedDataFileNames, sheet_download)
 
-format(object.size(homogenizedData), units = "Mb")
+format(object.size(homogenizedData), units = "Mb") # check object size
 
-lapply(homogenizedData, function(dataFrame) { if ("lat" %in% colnames(dataFrame)) { dataFrame %>% mutate(lat = as.character(lat)) } })
 
-asCharacter <- lapply(homogenizedData, function(dataFrame) { dataFrame %>% mutate_all(as.character) })
+# data backup -------------------------------------------------------------
 
-# toCharacter <- lapply(homogenizedData, function(dataFrame) { if ("L1" %in% colnames(dataFrame)) { dataFrame %>% mutate(L1 = as.character(L1)) } })
-# toCharacter <- lapply(homogenizedData, function(dataFrame) { if ("L1" %in% colnames(dataFrame)) { dataFrame$L1 <- as.character(dataFrame$L1) } })
-# 
-# toCharacter <- lapply(toCharacter, function(dataFrame) { if ("L3" %in% colnames(dataFrame)) { dataFrame %>% mutate(L3 = as.character(L3)) } })
-# toCharacter <- lapply(toCharacter, function(dataFrame) { if ("L4" %in% colnames(dataFrame)) { dataFrame %>% mutate(L4 = as.character(L4)) } })
-# toCharacter <- lapply(toCharacter, function(dataFrame) { if ("modification_date" %in% colnames(dataFrame)) { dataFrame %>% mutate(modification_date = as.character(modification_date)) } })
+# optional: to avoid rerunning the downloading + binding operation
 
-# boundData <- bind_rows(toCharacter)
-boundData <- bind_rows(asCharacter)
+# homogenizedDataBak <- homogenizedData
+# homogenizedData <- homogenizedDataBak 
+
+
+# standardize data format -------------------------------------------------
+
+# function guess_date: for a given data entity (e.g., data frame in a
+# list of data frames), identify any columns that are in the list of variables
+# (i.e., targets) that need to be standardized with regard to data type to
+# facilitate binding.
+guess_date <- function(entity) {
+  
+  if (!is.null(entity[["modification_date"]]) & !inherits(entity[["modification_date"]], 'Date')) {
+    
+    entity %>%
+      mutate(modification_date = parse_date_time(modification_date, c("mdY", "mdy", "m-d-Y")))
+    
+  } else if (!is.null(entity[["modification_date"]]) & inherits(entity[["modification_date"]], 'Date')) {
+    
+    entity %>%
+      mutate(modification_date = parse_date_time(modification_date, c("Y-m-d")))
+    
+  } else {
+    
+    entity
+    
+  }
+  
+} # close guess_date
+
+homogenizedData <- lapply(homogenizedData, guess_date)
+
+
+# conflicting column types to character -----------------------------------
+
+# function cols_to_character: for a given data entity (e.g., data frame in a
+# list of data frames), identify any columns that are in the list of variables
+# (i.e., targets) that need to be standardized with regard to data type to
+# facilitate binding.
+
+cols_to_character <- function(entity) {
+  
+  subTargets <- intersect(colnames(entity), targets)
+  
+  entity %>% 
+    mutate_at(vars(subTargets), as.character)
+  
+}
+
+# vector of data type conflicts
+targets <- c('lat',
+             'long',
+             'L1',
+             'L2',
+             'L3',
+             'L4',
+             'layer_top',
+             'layer_bot',
+             'bd_samp',
+             'NA_1',
+             'NA_2',
+             'tx_start',
+             'bgb_upperdiam',
+             'elevation',
+             'map',
+             'tx_L1',
+             'tx_L2',
+             'tx_L3',
+             'tx_L4',
+             'observation_date',
+             'observation_date_2',
+             'mat',
+             'wood_lit_c',
+             'slope') 
+
+homogenizedData <- lapply(homogenizedData, cols_to_character)
 
 boundData <- bind_rows(homogenizedData)
 
-###
+
+# write bound data to file ------------------------------------------------
+
+format(object.size(boundData), units = "Mb") # check object size
+
+saveRDS(boundData, paste0('/home/shares/lter-som/', 'somCompositeData_', Sys.Date(), '.rds'))
+write_csv(boundData, paste0('/home/shares/lter-som/', 'somCompositeData_', Sys.Date(), '.csv'))
+
+
+# preliminary data assessment ---------------------------------------------
+
+boundData %>%
+  filter(
+    !is.na(soc),
+    soc >= 0 & soc < 100
+  ) %>% 
+  ggplot(aes(x = soc)) +
+  geom_histogram() +
+  ggtitle(
+    label = "SOM across all data sets",
+    subtitle = "range constrained to 0-100"
+  )
+
+
+# scratch space -----------------------------------------------------------
 
 # files that had to be renamed
 AND_DIRT_10YR_CN_densefrac_HMGZD
 AND_DIRT_10YR_CN_raw_HMGZD
 
-###
-###
-###
-###
-###
-
-homogenizedDataFiles <- myDrive %>%
-  filter(grepl("HMGZD", sheet_title)) %>% 
-  # filter(file_ext(sheet_title) == "csv") %>% # cull csv
-  filter(!grepl("HMGZD_NOTES", sheet_title)) %>% 
-  select(sheet_title) %>% 
-  distinct(sheet_title) %>% 
-  mutate(
-    baseName = file_path_sans_ext(sheet_title),
-    extension = file_ext(sheet_title),
-    extension = replace(extension, extension == "", NA)
-  ) %>% 
-  group_by(baseName) %>%
-  filter(any(!is.na(extension))) %>%
-  View()
-
-
-distinct(sheet_title) %>% 
-pull(sheet_title)
-
-myDrive %>%
-  filter(grepl("HMGZD", sheet_title)) %>% 
-  filter(!grepl("HMGZD_NOTES", sheet_title)) %>% 
-  write_csv("~/Desktop/filenames.csv")
-
-sheet_download <- function(fileName) {
-  
-  token <- googlesheets::gs_title(fileName)
-  
-  dataFile <- googlesheets::gs_read(token)
-  
-}
-
-homogenizedData <- lapply(homogenizedDataFiles, sheet_download)
