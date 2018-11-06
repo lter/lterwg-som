@@ -1,9 +1,0 @@
----
-title: "About"
-date: "2018-10-04"
----
-
-# Advancing soil organic matter research: Synthesizing multi-scale observations, manipulations & models
-
-Competing hypotheses that emphasize the chemical recalcitrance vs. microbial-mineral stabilization of soil organic matter (SOM) generate alternative representations in biogeochemical models. Synthesis of multi-site data presents opportunities to evaluate and refine the theories, assumptions, and parameters associated with these alternative model structures and, ultimately advance ecosystem science. Such efforts would markedly benefit from syntheses of soil organic matter (SOM) data within and among LTER sites. Given the continental-scale eco-climatological and edaphic gradients that LTER sites cover, the Network is uniquely suited to further our understanding of spatial and temporal variability in SOM and to investigate drivers of SOM change. Using synthesis and modeling, this proposal aims to leverage LTER-derived data related to SOM pools, fluxes, and drivers to close knowledge gaps that currently thwart model development far beyond Network site. Further, by including SOM responses to multiple experimental manipulations, this proposal will produce a dataset to advance a process-based understanding of controls on SOM accumulation, loss, and turnover that will broadly serve the intellectual and practical needs of multiple stakeholders well beyond the duration of this synthesis.
-
