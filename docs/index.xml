@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>LTER-CZO-NEON soil organic matter synthesis</title>
+    <link>/</link>
+    <description>Recent content on LTER-CZO-NEON soil organic matter synthesis</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 05 Nov 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>About us</title>
+      <link>/2018/11/05/about/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/about/</guid>
+      <description>Advancing soil organic matter research: Synthesizing multi-scale observations, manipulations &amp;amp; models.
+Competing hypotheses that emphasize the chemical recalcitrance vs. microbial-mineral stabilization of soil organic matter (SOM) generate alternative representations in biogeochemical models. Synthesis of multi-site data presents opportunities to evaluate and refine the theories, assumptions, and parameters associated with these alternative model structures and, ultimately advance ecosystem science. Such efforts would markedly benefit from syntheses of soil organic matter (SOM) data within and among LTER, CZO, and NEON sites.</description>
+    </item>
+    
+    <item>
+      <title>Authorship policy</title>
+      <link>/2018/11/05/authorship-policy/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/authorship-policy/</guid>
+      <description>here’s where we post our authorship policy</description>
+    </item>
+    
+    <item>
+      <title>Contribute</title>
+      <link>/2018/11/05/contribute/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/contribute/</guid>
+      <description>Here is some information about how to contribute to this effort
+Here is a link to a frozen key-key file
+Here is contact information for Will, Stevan, others…?</description>
+    </item>
+    
+    <item>
+      <title>Database</title>
+      <link>/2018/11/05/database/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/database/</guid>
+      <description>Here is some text to describe how we’re making the database
+Here is an image of our workflow</description>
+    </item>
+    
+    <item>
+      <title>Links and resources</title>
+      <link>/2018/11/05/links-and-resources/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/links-and-resources/</guid>
+      <description>Here are some links to our favorite networks and resources LTER NEON CZO DIRT NutNet ISRaD ISCN</description>
+    </item>
+    
+    <item>
+      <title>Projects</title>
+      <link>/2018/11/05/projects/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/projects/</guid>
+      <description>White paper Database paper SCIENCE PAPERS! [TBD]</description>
+    </item>
+    
+    <item>
+      <title>Suggested work flow</title>
+      <link>/2018/11/05/suggested-work-flow/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/suggested-work-flow/</guid>
+      <description>Download R Create a github account [optional, consider using a 3rd party interface like gitKraken] Stevan adds some text.</description>
+    </item>
+    
+    <item>
+      <title>Tools and Tutorials</title>
+      <link>/2018/11/05/tools-and-tutorials/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/tools-and-tutorials/</guid>
+      <description>This page will have high level information about to help users use the database
+Maybe a link to testbed code?</description>
+    </item>
+    
+    <item>
+      <title>About</title>
+      <link>/about/</link>
+      <pubDate>Thu, 04 Oct 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/about/</guid>
+      <description>Advancing soil organic matter research: Synthesizing multi-scale observations, manipulations &amp;amp; models Competing hypotheses that emphasize the chemical recalcitrance vs. microbial-mineral stabilization of soil organic matter (SOM) generate alternative representations in biogeochemical models. Synthesis of multi-site data presents opportunities to evaluate and refine the theories, assumptions, and parameters associated with these alternative model structures and, ultimately advance ecosystem science. Such efforts would markedly benefit from syntheses of soil organic matter (SOM) data within and among LTER sites.</description>
+    </item>
+    
+    <item>
+      <title>A Plain Markdown Post</title>
+      <link>/2016/12/30/a-plain-markdown-post/</link>
+      <pubDate>Fri, 30 Dec 2016 21:49:57 -0700</pubDate>
+      
+      <guid>/2016/12/30/a-plain-markdown-post/</guid>
+      <description>This is a post written in plain Markdown (*.md) instead of R Markdown (*.Rmd). The major differences are:
+ You cannot run any R code in a plain Markdown document, whereas in an R Markdown document, you can embed R code chunks (```{r}); A plain Markdown post is rendered through Blackfriday, and an R Markdown document is compiled by rmarkdown and Pandoc.  There are many differences in syntax between Blackfriday&amp;rsquo;s Markdown and Pandoc&amp;rsquo;s Markdown.</description>
+    </item>
+    
+    <item>
+      <title>Hello R Markdown</title>
+      <link>/2015/07/23/hello-r-markdown/</link>
+      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
+      
+      <guid>/2015/07/23/hello-r-markdown/</guid>
+      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
+You can embed an R code chunk like this:
+summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
+    </item>
+    
+  </channel>
+</rss>
