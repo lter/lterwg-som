@@ -70,6 +70,15 @@ Here is an image of our workflow</description>
     </item>
     
     <item>
+      <title>Suggested work flow</title>
+      <link>/2018/11/05/suggested-work-flow/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/11/05/suggested-work-flow/</guid>
+      <description>Download R Create a github account [optional, consider using a 3rd party interface like gitKraken] Stevan adds some text.</description>
+    </item>
+    
+    <item>
       <title>Tools and Tutorials</title>
       <link>/2018/11/05/tools-and-tutorials/</link>
       <pubDate>Mon, 05 Nov 2018 00:00:00 +0000</pubDate>
@@ -98,15 +107,6 @@ Maybe a link to testbed code?</description>
       <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
 You can embed an R code chunk like this:
 summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
-    </item>
-    
-    <item>
-      <title>Lorem Ipsum</title>
-      <link>/2015/01/01/lorem-ipsum/</link>
-      <pubDate>Thu, 01 Jan 2015 13:09:13 -0600</pubDate>
-      
-      <guid>/2015/01/01/lorem-ipsum/</guid>
-      <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</description>
     </item>
     
   </channel>

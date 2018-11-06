@@ -17,7 +17,7 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 # how do I point to the home page?
 [[menu.main]]
     name = "Home"
-    url = "/about/"
+    url = "index.html"
 
 [[menu.main]]
     name = "GitHub"
@@ -40,8 +40,8 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
     MathJaxVersion = "2.7.5"
 
     [params.logo]
-    url = "logo.png"
+    url = "lter_nco.png"
     width = 50
     height = 50
-    alt = "Logo"
+    alt = "Home"
 
