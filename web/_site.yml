@@ -13,6 +13,9 @@ navbar:
       href: database.html
     - text: "Links"
       href: links.html
+  right:
+    - icon: fa-github
+      href: https://github.com/lter/lterwg-som
 output:
   html_document:
     theme: cosmo
