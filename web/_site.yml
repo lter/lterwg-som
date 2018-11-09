@@ -7,7 +7,7 @@ navbar:
       href: index.html
     - text: "Tools & tutorials"
       href: tools_tutorials.html
-    - text: "Suggested workflow"
+    - text: "Workflow"
       href: workflow.html
     - text: "Database"
       href: database.html
