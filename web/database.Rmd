@@ -1,3 +1,17 @@
 ---
 title: "Database"
 ---
+
+<!-- Start Writing Below in Markdown -->
+
+# Workflow
+
+![The schematic above illustrates our workflow](images/SynthesisWorkflow_1.png)
+
+
+
+# Progress
+ 
+  To date we have data from >140 sites with >360,000 rows of information
+  
+![This map shows data locations](images/LocationMap.png)

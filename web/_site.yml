@@ -5,7 +5,7 @@ navbar:
   left:
     - text: "About us"
       href: index.html
-    - text: "Tools and Tutorials"
+    - text: "Tools & tutorials"
       href: tools_tutorials.html
     - text: "Suggested workflow"
       href: workflow.html
