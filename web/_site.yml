@@ -1,10 +1,10 @@
-name: "LTER-CZO-NEON soil organic matter synthesis"
+name: "Network SOM synthesis"
 output_dir: "../docs"
 navbar:
-  title: "LTER-CZO-NEON soil organic matter synthesis"
+  title: "Network SOM synthesis"
   left:
     - text: "About us"
-      href: index.html
+      href: about.html
     - text: "Tools & tutorials"
       href: tools_tutorials.html
     - text: "Workflow"
