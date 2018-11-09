@@ -13,6 +13,8 @@ navbar:
       href: database.html
     - text: "Links"
       href: links.html
+    - text: "QC plots"
+      href: QC_plots.html
   right:
     - icon: fa-github
       href: https://github.com/lter/lterwg-som
