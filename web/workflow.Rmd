@@ -27,5 +27,5 @@ https://github.com/srearl/soilHarmonization
 
 ### Data aggregation 
 
-Location data are aggregated with the harvest_HMGZD.R package
+Location data are aggregated with the harvest_HMGZD.R script
 
