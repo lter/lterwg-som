@@ -48,4 +48,6 @@ qaqcFileListSansExt <- file_path_sans_ext(qaqcFileList)
 
 ![Stacy_2015_ssCZO_Bull_HMGZD_QC](docs/qaqc/Stacy_2015_ssCZO_Bull_HMGZD_QC.html)
 
+direct: https://lter.github.io/lterwg-som/docs/qaqc/Stacy_2015_ssCZO_Bull_HMGZD_QC.html
+
 <!-- [Stacy_2015_ssCZO_Bull_HMGZD_QC](https://lter.github.io/lterwg-som/docs/qaqc/Stacy_2015_ssCZO_Bull_HMGZD_QC.html) -->
