@@ -1,3 +1,44 @@
 ---
-title: "QC plots"
+title: "QC_plots"
+output: html_document
 ---
+
+placeholding text
+
+```{r library, echo=FALSE, include=FALSE}
+
+library(tools)
+```
+
+
+```{r GD_to_GH, echo=FALSE, include=FALSE}
+
+file.copy(from = list.files(path = '/home/shares/lter-som/Data-downloads/',
+                            full.names = TRUE,
+                            pattern = "*_HMGZD_QC.html",
+                            recursive = TRUE),
+          to = '/home/earl/localRepos/lterwg-som/docs/qaqc/',
+          overwrite = TRUE,
+          recursive = FALSE)
+```
+
+```{r list_of_links, echo=FALSE, include=FALSE}
+
+qaqcFileList <- list.files(path = '/home/earl/localRepos/lterwg-som/docs/qaqc/',
+                           full.names = FALSE,
+                           recursive = FALSE)
+
+qaqcFileListSansExt <- file_path_sans_ext(qaqcFileList)
+
+```
+
+```{r results='asis', echo=FALSE, eval=FALSE}
+
+# paste0('![', qaqcFileListSansExt, '](/home/earl/localRepos/lterwg-som/docs/qaqc/', qaqcFileList, ')')
+```
+
+
+![Stacy_2015_ssCZO_Bull_HMGZD_QC](/home/earl/localRepos/lterwg-som/docs/qaqc/Stacy_2015_ssCZO_Bull_HMGZD_QC.html)
+
+
+[Stacy_2015_ssCZO_Bull_HMGZD_QC](https://lter.github.io/lterwg-som/docs/qaqc/Stacy_2015_ssCZO_Bull_HMGZD_QC.html)
