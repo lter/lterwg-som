@@ -55,11 +55,7 @@ options(httr_oob_default=TRUE) # create out-of-band oauth token in server env
 
 # load resources ----------------------------------------------------------
 
-# Google Sheet download script. This will be available from the
-# soilHomogenization package but can be loaded from this repository if desired
-# for whatever reason.
-
-# source("/ ... path .../sheet_download.R")
+# sheet_download.R script from the soilHarmonization package required.
 
 
 # identify files to harvest -----------------------------------------------
