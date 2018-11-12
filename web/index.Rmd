@@ -1,9 +1,15 @@
 ---
-title: "LTER-CZO-NEON soil organic matter synthesis"
+title: "LTER-CZO-NEON soil organic matter research"
 ---
 
-### Advancing soil organic matter research:
+# 
 ### Synthesizing multi-scale observations, manipulations & models.
 
-This website serves as a landing page for the LTER-CZO-NEON soil organic matter working group
+This is a repository for the LTER-CZO-NEON Soil Organic Matter Synthesis working group
 
+Soil organic matter is a massive storehouse for carbon, as well as a key regulator of nutrient cycling and soil quality in terrestrial ecosystems, yet ecology lacks a full understanding of the controls on stabilization and breakdown of soil organic matter. This working group is synthesizing data across research networks to learn more about organic matter dynamics in world beneath our feet. 
+
+## Principal Investigators
+
+Will Wieder and Kate Lajtha
+Award Date: September 20, 2017
