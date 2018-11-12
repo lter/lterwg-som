@@ -5,7 +5,7 @@
 # 
 
 ### Getting Started
-#To start, let's first load up the libraries we'll be using here.  
+#To start, let's first load up a few of the libraries we'll be using here.  
 #Much of the data processing workflow here is done with the dplyr package. 
 
 #Load libraries
