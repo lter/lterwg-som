@@ -2,7 +2,7 @@
 title: "About us"
 ---
 
-### Advancing soil organic matter research: Synthesizing multi-scale observations, manipulations & models.
+## Advancing soil organic matter research: Synthesizing multi-scale observations, manipulations & models.
 
 Competing hypotheses that emphasize the chemical recalcitrance vs. microbial-mineral stabilization of soil organic matter (SOM) generate alternative representations in biogeochemical models. Synthesis of multi-site data presents opportunities to evaluate and refine the theories, assumptions, and parameters associated with these alternative model structures and, ultimately advance ecosystem science. Such efforts would markedly benefit from syntheses of soil organic matter (SOM) data within and among LTER, CZO, and NEON sites.
 

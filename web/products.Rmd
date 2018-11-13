@@ -1,0 +1,18 @@
+---
+title: "Products"
+---
+
+
+## Products from this activity include:
+### Presentations
+* LTER - ASM workshop "Making sense of soil organic matter: barriers and opportunities for cross-site synthesis" (2018)
+* AGU "Leveraging network science to evaluate mechanisms and models of soil organic matter stabilization and change" (2018)
+
+### Code
+see our git hub page
+
+
+### Papers
+TBD
+
+
