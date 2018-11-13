@@ -11,6 +11,12 @@ navbar:
       href: workflow.html
     - text: "Database"
       href: database.html
+    - text: "Authorship"
+      href: authorship.html
+    - text: "Products"
+      href: products.html
+    - text: "Projects"
+      href: projects.html
     - text: "Links"
       href: links.html
     - text: "QC plots"
