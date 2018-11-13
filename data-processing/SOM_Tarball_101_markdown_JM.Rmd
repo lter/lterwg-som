@@ -1,0 +1,198 @@
+---
+title: "SOM_Tarball_101_markdown_JM"
+author: "Jessica Moore"
+date: "11/12/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+# Getting Started
+
+To start, let's first load up the libraries we'll be using here.  Much of the data processing workflow here is done with dplyr. A helpful cheatsheet with common dplyr  functions can be found here: [https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+
+
+```{r warning = FALSE, message = FALSE}
+#Load libraries
+library(dplyr)
+library(ggplot2)
+```
+
+
+### Loading The Data
+**The compiled SOM data tarball can be found on our Google Drive [here](https://drive.google.com/drive/folders/1bQcTB8lZtE0vjuZ_kvPvDbHCyv0PLbt6?ogsrc=32)**
+
+Let's load in the compiled SOM data tarball .csv file and see what data columns we have to work with.
+
+More info on the data columns can be found in the keykey master file located [here](https://drive.google.com/open?id=1kF-v3amzgqcjYXeJz7dfTgGuzb5xG0rY31Y1C6rR4kw) on the LTERWG Google Drive.
+
+``` {r}
+#Change path to wherever you have the tarball.csv stored locally
+data.all <- read.csv("E:/Box/Box Sync/SOM_tarball/tarball_10-18-2018.csv", stringsAsFactors = FALSE)  
+
+#Print out tarball column names
+colnames(data.all)[1:30]  #only the first 30 in this case
+```
+
+### Unite site codes and location names
+Currently, site identifiers exist in two columns, 'location_name' and 'site code.'  To simplify data labels below, let combine those identifiers together into a new column called 'full_name'.
+```{r}
+  data.all$full_name <- paste0(data.all$site_code," ",data.all$location_name)  #Concatenate strings
+  data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove NA from strings
+```
+You can use the code `unique(data$full_name)` to see the full list of locations
+
+
+# Filtering The Data
+
+### By network
+Using the 'network' column we can select data from a specific network
+```{r}
+  #View network names  
+  unique(data.all$network)
+  
+  #Create a new dataframe with data from a specific network
+  data.neon <- data.all %>% filter(network == "NEON")   
+```
+ 
+### By depth 
+Here's an example how to select the soil data from 0-10 cm
+```{r}
+  data.surf <- data.all %>% filter(layer_top == 0 & layer_bot == 10)
+```
+
+
+### By treatment level
+```{r}
+  #Take a look at names of level 1 treatments
+  unique(data.all$tx_L1)[1:30]  #only showing the first 30
+  
+  #Create vector of names to select for control or undisturbed sample locations
+  ctls <- c("c","Undisturbed","Unmanaged","CTL","CO","Control")
+
+  #Filter data by L1 treatment values = CONTROL or UNDISTURBED
+  data.ctl <- data.all %>% filter(tx_L1 %in% ctls)
+```
+
+
+# Data Exploration Examples
+
+### Data inventory tables
+Create a dataframe table to show the number of values for 'soc' and 'c_tot' by location ('full_name')
+```{r}
+  data.ctbl <- data.all %>% group_by(full_name) %>% summarize(count.ctot = n_distinct(c_tot, na.rm = TRUE),
+                                                              count.soc = n_distinct(soc, na.rm = TRUE))
+  
+  #Show the first 10 rows of the table
+  data.ctbl[1:10,]
+```
+
+
+Next let's take a look at the number of experimental levels by location
+```{r}
+  data.explvls <- data.all %>% group_by(full_name) %>% summarize(L1_n = n_distinct(L1, na.rm = TRUE),
+                                                                 L2_n = n_distinct(L2, na.rm = TRUE),
+                                                                 L3_n = n_distinct(L3, na.rm = TRUE),
+                                                                 L4_n = n_distinct(L4, na.rm = TRUE),
+                                                                 L5_n = n_distinct(L5, na.rm = TRUE))
+  #Show the first 10 rows of the table
+  data.explvls[1:10,]
+```
+
+# Plot Examples
+###Filter data and create box plot by location
+```{r warning = FALSE, message = FALSE, fig.width = 10, fig.height=6}
+  
+  #Define the treatment classes to include. Only control type data in this case.
+  ctls <- c("c","Undisturbed","Unmanaged","CTL","CO","Control")
+
+  #Filter data by treatment and depth 
+  data.plot <- data.all %>% filter(tx_L1 %in% ctls) %>% filter(layer_top == 0 & layer_bot == 10) %>% 
+    select(full_name,location_name, site_code, soc, layer_top, layer_bot)  #Simplify the dataframe by selecting                                                                                                       only the columns we may need for                                                                                                          this plot/task
+
+  #Create boxplot  (...may also by piped after the code above)
+  soc.ctl.bxplot <- ggplot(data.plot, aes(x=full_name, y=soc)) + geom_boxplot() + 
+                    theme(axis.text.x = element_text(angle = 90, hjust = 1))  #Rotate x-axis labels 
+  soc.ctl.bxplot  #display plot
+```
+
+
+# Map Examples
+
+###Currently we have to hotfix the latitude and longitude values to decimal degrees
+A table with uniform decimal degree coordinates has been created to merge in with the raw compiled data. The 'SOM_clean_coords.csv' can be found [here](https://drive.google.com/open?id=1jdhUkP6G3FYQhEZDIYBN6sQ930bxsZp8)
+```{r}
+  #Bring in clean coordinate csv
+  clean.coords <- read.csv("SOM_clean_coords.csv", stringsAsFactors = FALSE)
+  
+  #Remove duplicate lat & long values to avoid adding rows in join step
+  lat.clean <- clean.coords %>% distinct(lat, lat.clean)
+  long.clean <- clean.coords %>% distinct(long, long.clean)
+  
+  #Join clean coordinate columns to tarball dataframe
+  data.all <- left_join(data.all, lat.clean, by="lat") %>% left_join(., long.clean, by="long")
+```
+The uniform, aka "clean" coordinates are now added to the end of the dataframe as 'lat.clean' and 'long.clean' 
+
+
+###Simple point map
+Here's an example of a simple line and point map showing sites included in the dataset
+```{r}
+library(maps)
+
+  map('world')
+  points(data.all$long.clean, data.all$lat.clean, col=2, pch=19)
+```
+
+  
+###Filter data and create map of mean 0-10 cm SOC for undistrubed soils only
+```{r warning = FALSE, message = FALSE, fig.width = 10, fig.height=6}
+library('ggmap')
+
+  #Starting with the merged clean lat, long dataframe from above (...still named data.all)
+  #Also using the defined 'ctls' from above to select undisturbed soils only
+  data.map <- data.all %>% filter(tx_L1 %in% ctls) %>% filter(layer_top == 0 & layer_bot == 10) %>% 
+    select(full_name,location_name, site_code, soc, layer_top, layer_bot, lat.clean, long.clean)
+  
+
+  #Summarize data to find n, mean, st dev, min, and max soc values by location
+  data.map.soc <- data.map %>% distinct(full_name,soc,lat.clean,long.clean) %>%  #Remove duplicate rows
+                                filter(!is.na(soc)) %>%  #Remove rows with NA for soc 
+                                group_by(full_name) %>%   #To summarize the data by location, first we need                                                                                          to group it by location
+                                summarise(soc.count = n(),  #Summarise creates new dataframe with desired                                                                                              group statistics 
+                                          soc.mn = mean(soc, na.rm = T),  
+                                          soc.stdv = sd(soc, na.rm = T),
+                                          soc.min = min(soc, na.rm = T),
+                                          soc.max = max(soc, na.rm = T),
+                                          lat = first(lat.clean),  #Isolate coordinates within the summary                                                                                                    call, grabs the first value in the group
+                                          long = first(long.clean))
+  
+
+  #Map it
+  mapWorld <- borders("world", colour="gray50", fill="gray50") # Create the world map
+  ggplot() + mapWorld + geom_point(data = data.map.soc, aes(x=long, y = lat, color=soc.mn), size=3) + 
+    coord_fixed(1.3) +  #Ensure the coordinates points are projected correctly
+    scale_colour_gradientn(colours=rainbow(4))  #Expand the color scale
+```
