@@ -1,9 +1,0 @@
----
-title: "LTER-CZO-NEON soil organic matter synthesis"
----
-
-### Advancing soil organic matter research:
-### Synthesizing multi-scale observations, manipulations & models.
-
-This website serves as a landing page for the LTER-CZO-NEON soil organic matter working group
-
