@@ -50,10 +50,11 @@ More info on the data columns can be found in the keykey master file located [he
 
 ``` {r}
 #Change path to wherever you have the tarball.csv stored locally
-data.all <- read.csv("E:/Box/Box Sync/SOM_tarball/tarball_10-18-2018.csv", stringsAsFactors = FALSE)  
+data.all <- readRDS("/Users/JM 1/Downloads/somCompositeData_2018-11-09T17_34_23.rds")  
 
 #Print out tarball column names
-colnames(data.all)[1:30]  #only the first 30 in this case
+#colnames(data.all)[1:30]  #only the first 30
+colnames(data.all) #all col names
 ```
 
 ### Unite site codes and location names
