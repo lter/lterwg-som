@@ -16,7 +16,7 @@ library(ggplot2)
 ########################################
 
   #Change path to wherever you have the tarball.csv stored locally
-  data.all <- readRDS("/Users/wwieder/Desktop/lter_homogenized/somCompositeData_2018-11-09T17_34_23.rds")  
+  data.all <- read.csv("E:/Box/Box Sync/SOM_tarball/tarball_10-18-2018.csv", stringsAsFactors = FALSE)  
   
   #Print out tarball column names
   colnames(data.all)[1:30]  #only the first 30 in this case
@@ -26,38 +26,9 @@ library(ggplot2)
   data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove NA from strings
   
   #Print list of location names
-  unique(data.all$full_name)
-  unique(as.numeric(data.all$map))
-  unique(data.all$hzn)
-  
-  boxplot(data.all$map ~ data.all$full_name)
+  unique(data$full_name)
 
-  summary(data.all$soc) 
-  org <- c('org','Organic','Oa','Oi','Oe') #etc
-  data.all$mat <- as.numeric(data.all$mat)
-  data.all %>%
-    filter(!hzn %in% org) %>% 
-    filter(bd_samp > 0.5) %>%   # also masks out NA values for pools
-    filter(layer_bot > 0) %>%
-    filter(soc > 0) %>% filter(soc < 25) %>%
-    ggplot(aes(x = as.numeric(mat), y = soc)) +
-#   geom_point(alpha = 0.3, position = position_jitter()) 
-    geom_boxplot() +
-    facet_wrap(~full_name, scale="free")
-  
-  
-  DATA %>%
-    filter(DATA$ph_h2o <= 7 & !is.na(DATA$layer)) %>%
-    ggplot(aes(x= al_ox, y = oc, color = as.factor(layer), shape = as.factor(layer) )) +
-    ggtitle('Acidic, log10(oc) ~ log10(al_ox)') +
-    scale_x_log10() +
-    scale_y_log10() +
-    ylim(range(DATA$oc, na.rm=T))  +
-    geom_smooth(method = "lm", formula = formula) +
-    stat_poly_eq(aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~")),
-                 formula = formula, parse = TRUE)+
-    geom_point(alpha = 0.3, position = position_jitter()) 
-  
+
 ### Filtering The Data
 #######################################
 
