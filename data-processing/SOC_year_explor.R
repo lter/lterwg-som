@@ -82,9 +82,16 @@ soc.per<-ggplot(data.soc.percent.years, aes(x=year, y=soc))+
 soc.per
 
 ### some site-specific time series analyses
-data.soc.percent.umbs<-filter(data.soc.percent, data.soc.percent$site_code=="UMBS")
-soc.per<-ggplot(data.soc.percent.umbs, aes(x=year_all, y=soc))+
-  geom_point(aes(color=tx_L1))+
+data.soc.percent.umbs.c<-data.soc.percent %>% filter(site_code=="UMBS") %>% filter(tx_L1=="C")
+soc.per<-ggplot(data.soc.percent.umbs.c, aes(x=year_all, y=soc))+
+  geom_point()+
   #scale_y_continuous(limits=c(0,30000))+t
-  labs(x="Observation Year", y="SOC")
+  labs(x="Observation Year", y="SOC in Control Plots")
+soc.per
+
+### UMBS temp, not year
+soc.per<-ggplot(data.soc.percent.umbs.c, aes(x=, y=soc))+
+  geom_point()+
+  #scale_y_continuous(limits=c(0,30000))+t
+  labs(x="Observation Year", y="SOC in Control Plots")
 soc.per
