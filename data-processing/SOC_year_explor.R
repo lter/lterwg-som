@@ -82,11 +82,11 @@ soc.per<-ggplot(data.soc.percent.years, aes(x=year, y=soc))+
 soc.per
 
 ### some site-specific time series analyses
-data.soc.percent.umbs.c<-data.soc.percent %>% filter(site_code=="UMBS") %>% filter(tx_L1=="C")
-soc.per<-ggplot(data.soc.percent.umbs.c, aes(x=year_all, y=soc))+
+data.soc.percent.umbs.dl<-data.soc.percent %>% filter(site_code=="UMBS") %>% filter(tx_L1=="DL")
+soc.per<-ggplot(data.soc.percent.umbs.dl, aes(x=year_all, y=soc))+
   geom_point()+
   #scale_y_continuous(limits=c(0,30000))+t
-  labs(x="Observation Year", y="SOC in Control Plots")
+  labs(x="Observation Year", y="SOC in DL Plots")
 soc.per
 
 ### UMBS temp, not year
@@ -95,3 +95,22 @@ soc.per<-ggplot(data.soc.percent.umbs.c, aes(x=, y=soc))+
   #scale_y_continuous(limits=c(0,30000))+t
   labs(x="Observation Year", y="SOC in Control Plots")
 soc.per
+
+#############
+#Bulk Density
+data.all.bd<-data.all %>% filter(bd_samp!="NA")
+data.all.bd$layer_top<-as.numeric(data.all.bd$layer_top)
+data.all.bd$bd_samp<-as.numeric(data.all.bd$bd_samp)
+data.all.bd.tot<-filter(data.all, bd_tot!="NA")
+ggplot(data.all.bd, aes(y=layer_top, x=bd_samp))+
+  geom_point(aes(color=network))+
+  scale_x_continuous(limits=c(0,3))
+  #scale_y_continuous(limits=c(0,30000))+t
+  #labs(x="Observation Year", y="SOC in Control Plots")
+
+###########
+#Litter quantity and quality by SOC
+data.all.litter<-data.all %>% filter(litterfall_anpp!="NA")
+ggplot(data.all.litter, aes(x=litterfall_anpp, y=soc_stock))+
+  geom_point(aes(color=site_code))
+
