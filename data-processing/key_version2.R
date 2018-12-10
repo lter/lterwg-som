@@ -66,13 +66,13 @@ library(tools)
 # create template for logging details of key file upversions. caution: this code
 # will overwrite an existing log
 
-tibble(
-  keyFileName = as.character(NA),
-  keyFileDirectory = as.character(NA),
-  timestamp = as.POSIXct(NA)
-) %>% 
-  write_csv(path = '/home/shares/lter-som/key_file_update_log.csv',
-            append = FALSE)
+# tibble(
+#   keyFileName = as.character(NA),
+#   keyFileDirectory = as.character(NA),
+#   timestamp = as.POSIXct(NA)
+# ) %>% 
+#   write_csv(path = '/home/shares/lter-som/key_file_update_log.csv',
+#             append = FALSE)
 
 
 # key_version2 function ---------------------------------------------------
