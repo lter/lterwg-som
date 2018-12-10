@@ -1,12 +1,3 @@
-# development files
-
-sheetName <- 'cap_557_Key_Key_master_app4' # version 1
-sheetName <- '621_Key_Key_test' # version 1
-sheetName <- 'app4_out' # already upversioned
-
-# run as...
-key_version2('621_Key_Key_test')
-
 
 # README ------------------------------------------------------------------
 
@@ -44,11 +35,20 @@ key_version2('621_Key_Key_test')
 # 3. Revised options in the Units tab for the list of drop-down options in the
 # treatment rows of the Profile tab.
 
+# 4. Add pull-down menu for units field of lit_lig in location tab.
+
+# 5. Clarify meanings (Var_long field) of profle tab c_tot and soc (bulk, not
+# fraction)
+
 # Though specific to version 2 features, this workflow could be modified to
 # implement new features for future versions.
 
 # ** note
 # this workflow is specific to being run on Aurora
+
+# run as...
+# key_version2('621_Key_Key_test')
+# key_version2('cap.557.Key_Key_master')
 
 
 # libraries ---------------------------------------------------------------
@@ -299,6 +299,11 @@ key_version2 <- function(sheetName) {
     select(column) %>% 
     pull()
   
+  # get the column id of the soil.C,.soil.N column in the Units sheet
+  soilCNColID <- spreadsheetLetters %>% 
+    filter(grepl('soil', columnName)) %>% 
+    select(column) %>% 
+    pull()
   
   # add Units::logical validation to Location::time_series
   
@@ -333,6 +338,39 @@ key_version2 <- function(sheetName) {
                  rows = grep("merge_align", sheetLocation$var) + 1,
                  type = "list",
                  value = paste0("'Units'!$", logicalColID, "$2:$", logicalColID, "$11"))
+  
+  # add Units::soil C, soil N#1-5 validation to Location::lit_lig
+  dataValidation(wb = keyfileWorkbook, 
+                 sheet = "Location_data", 
+                 cols = 2,
+                 rows = grep("lit_lig", sheetLocation$var) + 1,
+                 type = "list",
+                 value = paste0("'Units'!$", soilCNColID, "$2:$", soilCNColID, "$6"))
+  
+  
+  # change c_tot & soc Var_long ---------------------------------------------
+  
+  if (!is.null(grep("Bulk Layer Total Carbon", sheetProfile$Var_long))) {
+    
+    writeData(wb = keyfileWorkbook,
+              sheet = 'Profile_data (Key-Key)',
+              x = 'Bulk Layer Total Carbon, not acid treated to remove inorganic C',
+              startCol = 3,
+              startRow = grep("Bulk Layer Total Carbon", sheetProfile$Var_long) + 1,
+              colNames = TRUE)
+    
+  }
+  
+  if (!is.null(grep("Bulk Layer Organic Carbon \\(CN analyzer\\) concentration", sheetProfile$Var_long))) {
+    
+    writeData(wb = keyfileWorkbook,
+              sheet = 'Profile_data (Key-Key)',
+              x = 'Bulk Layer Organic Carbon (CN analyzer) concentration, inorganic C removed or not present',
+              startCol = 3,
+              startRow = grep("Bulk Layer Organic Carbon \\(CN analyzer\\) concentration", sheetProfile$Var_long) + 1,
+              colNames = TRUE)
+    
+  }
   
   
   # fix formatting imposed by openxlsx --------------------------------------
