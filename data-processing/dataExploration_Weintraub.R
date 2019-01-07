@@ -67,3 +67,19 @@ ggplot(subset(nn, !is.na(nn$tx_L1)), aes(tx_L1, soc)) +
   geom_boxplot()
 ## Response ratio
 # TBD
+
+## Pull out CPER for Melanie
+CPER <- data.all %>%
+  filter(full_name == "CPER") %>%
+  mutate(layer_depth = as.numeric(layer_bot) - as.numeric(layer_top),
+           soc_stock = (soc/100)*as.numeric(bd_samp)*layer_depth*10000)
+
+CPER_stocks <- CPER %>%
+  mutate(L3 = ifelse(L2 == "10_CPER_PIT1", L2, L3)) %>%
+  group_by(L3) %>%
+  summarise(soc_stock = sum(soc_stock), depth = last(as.numeric(layer_bot)))
+  
+incept <- data.all %>%
+  filter(soil_taxon == "Inceptisols")
+
+levels(as.factor(incept$full_name))
