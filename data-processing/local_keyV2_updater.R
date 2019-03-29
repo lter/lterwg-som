@@ -30,10 +30,10 @@ key_update_v2(sheetName = key_file_name,
 ### After successful keyV2 update, go into key and update new vars 
 #   (last 7 rows of keykey location tab sheet & treatment levels in the profile tab sheet)
 
-#Then, re-homog and QC
+#Then, re-homog
 data_homogenization(directoryName = data_folder, 
                     temporaryDirectory = temp_path)
 
-### Check QC log and fix erors, re-QC as needed
-homogenization_QC(directoryName = data_folder, 
-                  temporaryDirectory = temp_path)
+### Check QC log and fix erors, re-homog as needed (delete homog and QC files before re-homog)
+
+
