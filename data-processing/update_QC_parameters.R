@@ -23,6 +23,11 @@ library(tidyverse)
 library(usethis)
 
 
+# options -----------------------------------------------------------------
+
+options(scipen = 999)
+
+
 # load data and store a temporary (backup) --------------------------------
 
 # load data from package
@@ -54,5 +59,12 @@ profileQC <- profileQC %>%
     maxValue = replace(maxValue, var == "K", 1000),
     maxValue = replace(maxValue, var == "Na", 1000)
   )
+
+usethis::use_data(profileQC, overwrite = TRUE)
+
+# update 2019-05-31: update layer_bot min to -1 to reflect different O horizons
+
+profileQC <- profileQC %>%
+  mutate(minValue = replace(minValue, var == "layer_bot", -1))
 
 usethis::use_data(profileQC, overwrite = TRUE)
