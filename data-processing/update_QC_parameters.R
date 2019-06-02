@@ -12,12 +12,11 @@
 # thus, available to the package soilHarmonization package functions. The
 # initial ranges identified at early stages of the project were in some cases
 # not appropriate (e.g., a range provided for a unit other than the expected
-# unit). This workflow documents updates to the QC values. Note that, in this
-# workflow, we are updating the data in the package directly rather than
-# updating the file on Google Drive thus the data in the Google Drive and in
-# this package are out-of-step for some variables.
+# unit). This workflow documents the initial creation of the *.rda files, which
+# is the same workflow used to update values as changes are required.
 
 # libraries ---------------------------------------------------------------
+
 
 library(tidyverse)
 library(usethis)
@@ -39,32 +38,18 @@ write_csv(locationQC, "~/Desktop/locationQC_OE.csv")
 write_csv(profileQC, "~/Desktop/profileQC_OE.csv")
 
 
-# update 2019-05-31 -------------------------------------------------------
+# load data from drive and add to package ---------------------------------
 
-# update 2019-05-31: update lit_c to reflect units of mg/g (not %)
-locationQC <- locationQC %>%
-  mutate(
-    minValue = replace(minValue, var == "lit_c", 0.1),
-    maxValue = replace(minValue, var == "lit_c", 600),
-    givenUnit = replace(givenUnit, var == "lit_c", "mg g-1")
-  )
+# here downloading data from Google Drive as csv files instead of reading
+# through goooglesheets, which woule work just as well
 
+# location
+
+locationQC <- read_csv('~/Desktop/Key_Key_V2_lookup - Location_data.csv')
 usethis::use_data(locationQC, overwrite = TRUE)
 
-# update 2019-05-31: update Ca, Mg, K, Na to reflect units of cmol kg-1 (not %)
-profileQC <- profileQC %>%
-  mutate(
-    maxValue = replace(maxValue, var == "Ca", 1000),
-    maxValue = replace(maxValue, var == "Mg", 1000),
-    maxValue = replace(maxValue, var == "K", 1000),
-    maxValue = replace(maxValue, var == "Na", 1000)
-  )
+# profile
 
+profileQC <- read_csv('~/Desktop/Key_Key_V2_lookup - Profile_data (Key-Key).csv')
 usethis::use_data(profileQC, overwrite = TRUE)
 
-# update 2019-05-31: update layer_bot min to -1 to reflect different O horizons
-
-profileQC <- profileQC %>%
-  mutate(minValue = replace(minValue, var == "layer_bot", -1))
-
-usethis::use_data(profileQC, overwrite = TRUE)
