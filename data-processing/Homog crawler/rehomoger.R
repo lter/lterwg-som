@@ -12,21 +12,27 @@ library('soilHarmonization')
 # SoilHarmonization temp_path
 hmg_temp <- "C:/Users/Derek/Desktop/tmp/SOM"
 
+# Get date as day-month
+today <- format(Sys.Date(), "%d%b")
+
 # Function: copy GDrive files using a Google ID string
 gd_copy <- function(gid, dest) {
   gfile <- as_id(gid)
   drive_cp(gfile, path=dest)
 }
 
-# Get date as day-month
-today <- format(Sys.Date(), "%d%b")
+# Function rename HMGZD files
+HMG_rename <- function(filename, dir) {
+  new_name <- paste0(dir, "_", gsub("Copy of ", "", filename), "_", today)
+  drive_rename(filename, name = new_name)
+}
 
 
 # Function: rehomog folder contents in new nested folder
 rehomog<- function(folder, homog_temp_path) {
   
   # debug vars
-  #folder <- "Barre Woods Warming"
+  #folder <- "CDR_E141_BioCON"
   #homog_temp_path <- hmg_temp
   
   # Get list of folder contents
@@ -54,6 +60,7 @@ rehomog<- function(folder, homog_temp_path) {
       # Bit of a manual catch all...update as needed
     data_files <- filter(file_info, !grepl("HMG",item)) %>% 
                     filter(., !grepl("folder",type)) %>% 
+                    filter(., !grepl("document",type)) %>% 
                     filter(., !grepl("key",item,ignore.case=TRUE)) %>% 
                     filter(., !grepl("zip",type,ignore.case=TRUE)) %>%
                     filter(., !grepl(".txt",item,ignore.case=TRUE)) %>%
@@ -81,19 +88,17 @@ rehomog<- function(folder, homog_temp_path) {
      new_files <- as.data.frame(drive_ls(path=paste0(folder,"_rehomoger"), trashed=FALSE))
      new_HMGZD_names <- grep("HMGZD", as.character(new_files[,1]), ignore.case=TRUE, value=TRUE)
     
-    # Change HMGZD data filename to folder_HMGZD and add date stamp  
+    # Change HMGZD data filename(s) to folder_filename_HMGZD_date  
      new_HMGZD_data <- new_HMGZD_names[!grepl("HMGZD_NOTES",new_HMGZD_names)]
-     drive_rename(new_HMGZD_data, name = paste0(folder,"_HMGZD_", today))
-    
+     sapply(new_HMGZD_data, HMG_rename, dir=folder) 
+      
      # Remove "rehomoger" from HMGZD notes filename and add date stamp 
      new_HMGZD_notes <- new_HMGZD_names[grepl("HMGZD_NOTES",new_HMGZD_names)]
      drive_rename(new_HMGZD_notes, name = gsub("rehomoger_HMGZD_NOTES.pdf",paste0("_HMGZD_NOTES_",today,".pdf"),new_HMGZD_notes)) 
      
      #Update HMGZD filenames 
-     new_HMGZD_names <- gsub(new_HMGZD_data, paste0(folder,"_HMGZD_", today), new_HMGZD_names) 
-     new_HMGZD_names <- gsub(new_HMGZD_notes, 
-                             gsub("rehomoger_HMGZD_NOTES.pdf",paste0("_HMGZD_NOTES_",today,".pdf"), new_HMGZD_notes), 
-                             new_HMGZD_names)
+     new_HMGZD_names <- paste0(folder, "_", gsub("Copy of ", "", new_HMGZD_data), "_", today)
+     new_HMGZD_names <- c(new_HMGZD_names,  gsub("rehomoger_HMGZD_NOTES.pdf",paste0("_HMGZD_NOTES_",today,".pdf"), new_HMGZD_notes))
      
     ### Move new HMGZD files to folder destination   
     # Specify GDrive folder to store new HMGZD files  
@@ -120,7 +125,7 @@ keyV2s <- read.csv("SOM_key_log_07-27-19.csv") %>% filter(key_v2 != "0" )
 sapply(as.character(keyV2s[,1]), rehomog, homog_temp_path=hmg_temp) 
 
 # For resuming homoger at specific folder row 
-#sapply(as.character(keyV2s[7:48,1]), rehomog, homog_temp_path=hmg_temp)
+#sapply(as.character(keyV2s[21:48,1]), rehomog, homog_temp_path=hmg_temp)
 
 
 # For running rehomoger function on a single folder, by name
