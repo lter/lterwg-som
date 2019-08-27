@@ -15,11 +15,12 @@ top_folders <- NULL
 for (j in 1:nrow(data_downloads)) {top_folders[j] <- as.character(data_downloads[j,1])}
 top_folders <- as.list(top_folders)
 
+
 ## Ignore list
   # Removed from top_folders
 top_ignore <- c("1_Climate_data","2_soilMoisture_Temp","3_NPP_Biomass",
-                "NEON_periodicSoil", "NEON_initialCharacterizationSoil", "NEON_megapitSoil-Roots",
-                "NEON_periodicRoots", "NEON_site-climate", "NEON_litterfall")
+                "NEON_periodicSoil", "NEON_initialCharacterizationSoil", "NEON_megapitSoil",
+                "NEON_megapitRoots", "NEON_periodicRoots", "NEON_site-climate", "NEON_litterfall")
 
 top_folders = top_folders[-which(top_folders %in% top_ignore)]
 
