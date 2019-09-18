@@ -129,6 +129,26 @@ googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/
   file.list12 <- list.files(path = paste0(dir, "/filesToStack10099/stackedFiles"), pattern="bbc", full.names = TRUE)
   map(file.list12, googledrive::drive_upload, path = "~/LTER-SOM/Data_downloads/NEON_periodicRoots/data-files/", verbose = FALSE)
 }
+### LITERFALL - 7 tables; this one is large (flux data), give it time
+{
+  googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/")
+  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/")
+  # Litterfall fluxes = DP1.10033
+  zipsByProduct(dpID="DP1.10033.001", site="all", package="basic", check.size=F) +
+    stackByTable(paste0(dir, "/filesToStack10033"), folder=T, saveUnzippedFiles = F)
+  file.list13 <- list.files(path = paste0(dir, "/filesToStack10033/stackedFiles"), pattern="ltr", full.names = TRUE)
+  map(file.list13, googledrive::drive_upload, path = "~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/", verbose = FALSE)
+  # Litter chemical properties = DP1.10031
+  zipsByProduct(dpID="DP1.10031.001", site="all", package="basic", check.size=F) +
+    stackByTable(paste0(dir, "/filesToStack10031"), folder=T, saveUnzippedFiles = F)
+  file.list14 <- list.files(path = paste0(dir, "/filesToStack10031/stackedFiles"), pattern="ltr", full.names = TRUE)
+  map(file.list14, googledrive::drive_upload, path = "~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/", verbose = FALSE)
+  # Litter stable isotopes = DP1.10101
+  zipsByProduct(dpID="DP1.10101.001", site="all", package="basic", check.size=F) +
+    stackByTable(paste0(dir, "/filesToStack10101"), folder=T, saveUnzippedFiles = F)
+  file.list15 <- list.files(path = paste0(dir, "/filesToStack10101/stackedFiles"), pattern="ltr", full.names = TRUE)
+  map(file.list15, googledrive::drive_upload, path = "~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/", verbose = FALSE)
+}
 
 ### Get physiographic data about the plots (slope, aspect, etc) using geoNEON package
 # Code can take ~ 20 minutes
@@ -149,6 +169,10 @@ sls_soilCoreCollection <- read.csv(paste
 bbc_percore <- read.csv(paste
                         (dir, "filesToStack10067/stackedFiles/bbc_percore.csv", 
                         sep = "/"), header = T)
+# one of the root litterfall files
+ltr_fielddata <- read.csv(paste
+                        (dir, "filesToStack10033/stackedFiles/ltr_fielddata.csv", 
+                        sep = "/"), header = T)
 # use def.extr.geo.os function in geoNEON to get plot-level metadata
 mgp <- def.extr.geo.os(mgp_permegapit, 'pitNamedLocation')
 spc <- def.extr.geo.os(spc_perplot, 'namedLocation')
@@ -160,18 +184,23 @@ sls <- def.extr.geo.os(slsLocations, 'namedLocation')
 bbcLocations <- as.data.frame(unique(bbc_percore$namedLocation))
 colnames(bbcLocations) <- "namedLocation"
 bbc <- def.extr.geo.os(bbcLocations, 'namedLocation')
+# same for distributed litterfall (ltr)
+ltrLocations <- as.data.frame(unique(ltr_fielddata$namedLocation))
+colnames(ltrLocations) <- "namedLocation"
+ltr <- def.extr.geo.os(ltrLocations, 'namedLocation')
 # save files locally
 write.csv(mgp, paste(dir, "spatial_mgp.csv", sep = "/"), row.names = F)
 write.csv(spc, paste(dir, "spatial_spc.csv", sep = "/"), row.names = F)
 write.csv(sls, paste(dir, "spatial_sls.csv", sep = "/"), row.names = F)
 write.csv(bbc, paste(dir, "spatial_bbc.csv", sep = "/"), row.names = F)
+write.csv(ltr, paste(dir, "spatial_ltr.csv", sep = "/"), row.names = F)
 # Upload these to Google Drive
 googledrive::drive_upload(paste(dir, "spatial_mgp.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/", verbose = FALSE)
 googledrive::drive_upload(paste(dir, "spatial_spc.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_initialCharacterizationSoil/data-files/", verbose = FALSE)
 googledrive::drive_upload(paste(dir, "spatial_sls.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_periodicSoil/data-files/", verbose = FALSE)
 googledrive::drive_upload(paste(dir, "spatial_bbc.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_periodicRoots/data-files/", verbose = FALSE)
+googledrive::drive_upload(paste(dir, "spatial_ltr.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/", verbose = FALSE)
 }
-
 
 ### Load Climate Data, long-term averages - already stored on Google Drive, NEON_site-climate
 {
@@ -575,3 +604,189 @@ googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_periodicRoots/NEON_peri
 googledrive::drive_upload(paste(dir, "periodic_roots.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_periodicRoots/NEON_periodicRoots_a-master-database/", 
                           type = "spreadsheet", verbose = FALSE)
 }
+
+### LITTERFALL ###
+{
+ltr_pertrap <- read.csv(paste
+                     (dir, "filesToStack10033/stackedFiles/ltr_pertrap.csv", 
+                       sep = "/"), header = T)
+ltr_field <- read.csv(paste
+                          (dir, "filesToStack10033/stackedFiles/ltr_fielddata.csv", 
+                            sep = "/"), header = T)
+ltr_mass <- read.csv(paste
+                          (dir, "filesToStack10033/stackedFiles/ltr_massdata.csv", 
+                            sep = "/"), header = T)
+ltr_chemsub <- read.csv(paste
+                          (dir, "filesToStack10033/stackedFiles/ltr_chemistrySubsampling.csv", 
+                            sep = "/"), header = T)
+ltr_CN <- read.csv(paste
+                        (dir, "filesToStack10031/stackedFiles/ltr_litterCarbonNitrogen.csv", 
+                          sep = "/"), header = T)
+ltr_lig <- read.csv(paste
+                        (dir, "filesToStack10031/stackedFiles/ltr_litterLignin.csv", 
+                          sep = "/"), header = T)
+
+## MASS
+# Clean-up, remove NAs and mistletoe
+ltr_mass_mod <- ltr_mass %>%
+  filter(!is.na(massSampleID), 
+         !is.na(fieldSampleID),
+         qaDryMass!="Y", 
+         !(remarks %in% c("Dwarf mistletoe", 
+                          "mistletoe", "Mistletoe")))
+# Summarize to find dupes
+dupes <- ltr_mass_mod %>%
+  group_by(massSampleID) %>%
+  dplyr::summarize(n = n()) %>%
+  filter(n > 1) # these massSampleIDs are duplicated, 116 as of Sept 2019
+# Subset to duplicated massSampleIDs
+ltr_mass_dupes <- ltr_mass_mod %>%
+  filter(massSampleID %in% dupes$massSampleID)
+View(ltr_mass_dupes) # Often masses are the same or very close (mistaken qaDryMass most likely)
+# Only retain the first instance of each record in duplicate pairs - short term, NEON will ultimately fix
+ltr_mass_mod <- ltr_mass_mod[!duplicated(ltr_mass_mod$massSampleID, fromLast=TRUE),] 
+
+## PER TRAP
+dupes <- ltr_pertrap %>%
+  group_by(trapID) %>%
+  dplyr::summarize(n = n()) %>%
+  filter(n > 1) # these trapIDs are duplicated, 1 as of Sept 2019
+# Only retain the first instance of each record in duplicate pairs - this also gets rid of NAs in trapID
+ltr_pertrap_mod <- ltr_pertrap[!duplicated(ltr_pertrap$trapID, fromLast = TRUE),]
+
+## FIELD
+unique(ltr_field$trapCondition)
+# Create a new condition field, to help filter out 'complete' traps vs ones with problems and thus incomplete data
+ltr_field_mod <- ltr_field %>%
+  mutate(trapCondition2 = ifelse(trapCondition %in% c("OK - Litter collected - Trap in good shape, no issues", 
+                                                      "TE - Litter not collected - trap empty", 
+                                                      "PF - Litter collected; Trap previously flooded", 
+                                                      "TS - Litter not collected, not discarded - trap skipped"), 
+                                 "Ok", "Problem"))
+# fieldSampleID can be missing even if trap condition is OK for TE (trap empty) or PF (previously flooded) 
+# methodological trap conditions causing missing fieldSampleID: HO (hole in trap),  RE (broken trap needing replacement), 
+# TB (trap blocked), TT (trap tipped), TS (trap skipped)
+
+## Combine data frames
+ltr_fieldAndTrap <- ltr_field_mod %>%
+  left_join(ltr_pertrap_mod, by= c("namedLocation", 
+                                   "trapID", 
+                                   "domainID", 
+                                   "siteID", 
+                                   "plotID")) %>% 
+  filter(trapType=="Elevated" ) 
+names(ltr_fieldAndTrap)
+names(ltr_mass_mod)
+ltr_all <- ltr_mass_mod %>%
+  left_join(ltr_fieldAndTrap, by=c("domainID",
+                                   "siteID", 
+                                   "plotID",
+                                   "trapID",
+                                   "setDate",
+                                   "collectDate",
+                                   "fieldSampleID")) %>% 
+  filter(trapType=="Elevated" ) 
+
+## SUBSET TO TRAPS WITH ONLY 'COMPLETE' DATA:
+# ~ 365 days of good trapping (+/- allowed buffer) in a given year + 90 % of trapping days no issue
+# Summarize trapping days per trapID + year
+ltr_fieldAndTrap_annual <- ltr_fieldAndTrap %>%
+  mutate(year = ifelse(!is.na(eventID), substr(eventID, 5, 8), substr(setDate, 1,4))) %>%
+  group_by(trapID, year, trapCondition2) %>%
+  summarize(trappingDaysSum = sum(trappingDays)) 
+# Wide format + add flags
+ltr_fieldAndTrap_annual_wide <- ltr_fieldAndTrap_annual %>%
+  spread(trapCondition2, trappingDaysSum) %>%
+  rename(trappingDaysOk = Ok, 
+         trappingDaysProb = Problem) %>%
+  rowwise() %>%
+  mutate(trappingDaysTotal = sum(trappingDaysOk, trappingDaysProb, na.rm = T), 
+         trappingDaysTot_pass = ifelse(trappingDaysTotal <= 430 & trappingDaysTotal >=299, "Y", "N"), # total number of days flag
+         trappingDays_pctGood = 100 * trappingDaysOk / trappingDaysTotal) # percentage of days good flag
+# Filter to only 'good' traps
+ltr_fieldAndTrap_annual_keep <- ltr_fieldAndTrap_annual_wide %>%
+  filter(trappingDays_pctGood >= 90 & trappingDaysTot_pass == "Y") %>%
+  mutate(trap_year = paste0(trapID, '-', year))
+
+## Summarize litterfall, annual fluxes - per trap
+ltrFlux_perTrap_perGroup <- ltr_all %>%
+  mutate(year = ifelse(!is.na(eventID), substr(eventID, 5, 8), substr(setDate, 1,4)),
+         trap_year = paste0(trapID, '-', year)) %>%
+  filter(trap_year %in% ltr_fieldAndTrap_annual_keep$trap_year) %>%
+  rowwise() %>%
+  mutate(massPerArea = dryMass / trapSize) %>%
+  ungroup() %>%
+  group_by(siteID, plotID, trapID, year, functionalGroup) %>%
+  summarize(gramsDMPerMeterSquared = sum(massPerArea)) %>%
+  left_join(select(ltr_fieldAndTrap_annual_keep, trapID, year, trappingDaysOk),
+            by = c("trapID", "year")) %>%
+  mutate(gramsDMPerMeterSquaredPerYear = round(365 * gramsDMPerMeterSquared / trappingDaysOk, 3))
+
+# ltrFlux_perTrap_perGroup.2 <- ltr_all %>%
+#   mutate(year = ifelse(!is.na(eventID), substr(eventID, 5, 8), substr(setDate, 1,4)),
+#          trap_year = paste0(trapID, '-', year)) %>%
+#   filter(trap_year %in% ltr_fieldAndTrap_annual_keep$trap_year) %>%
+#   group_by(siteID, plotID, trapID, year, functionalGroup) %>%
+#   summarize(dryMass_total = sum(dryMass),
+#             trapArea = first(trapSize))
+
+## Add Chemistry
+# Need this to add collect year to chemistry samples
+ltr_chemsub_mod <- ltr_chemsub %>%
+separate_rows(massSampleIDList) %>%
+  mutate(fieldSampleID = substr(massSampleIDList, 
+                                1,
+                                nchar(massSampleIDList) - 4)) %>%
+  left_join(select(ltr_field, fieldSampleID, eventID), by = "fieldSampleID") %>%
+  mutate(year = ifelse(!is.na(eventID), substr(eventID, 5, 8), substr(setDate, 1,4))) %>%
+  group_by(massSampleMixtureID) %>%
+  summarize(year = first(year))
+# CN - Take means for analytical reps & put CO2 trapped yes/no on the same line
+ltr_CN_mod <- ltr_CN %>%
+  group_by(cnSampleID) %>%
+  summarise_all(list( ~ if (is.numeric(.)) {
+    mean(., na.rm = TRUE)
+  } else {
+    first(.)
+  })) %>%
+  filter(!is.na(cnSampleID))
+# Functional Groups + collect year
+ltr_CN_mod <- ltr_CN_mod %>%
+  mutate(funGroup = substr(massSampleMixtureID, 
+                           nchar(massSampleMixtureID) - 2,
+                           nchar(massSampleMixtureID)),
+         functionalGroup = ifelse(funGroup == "LVS", "Leaves", "Needles")) %>%
+  left_join(ltr_chemsub_mod, by = "massSampleMixtureID")
+# Lignin - Take means for analytical reps
+ltr_lig_mod <- ltr_lig %>%
+  group_by(ligninSampleID) %>%
+  summarise_all(list( ~ if (is.numeric(.)) {
+    mean(., na.rm = TRUE)
+  } else {
+    first(.)
+  })) %>%
+  filter(!is.na(ligninSampleID))
+# Functional Groups
+ltr_lig_mod <- ltr_lig_mod %>%
+  mutate(funGroup = substr(massSampleMixtureID, 
+                           nchar(massSampleMixtureID) - 2,
+                           nchar(massSampleMixtureID)),
+         functionalGroup = ifelse(funGroup == "LVS", "Leaves", "Needles")) %>%
+  left_join(ltr_chemsub_mod, by = "massSampleMixtureID")
+## FINAL JOIN
+ltrFlux_perTrap_perGroup_chem <- ltrFlux_perTrap_perGroup %>%
+  left_join(select(ltr_CN_mod, plotID, functionalGroup, year,
+                   carbonPercent, nitrogenPercent), 
+            by = c("plotID", "functionalGroup", "year")) %>%
+  left_join(select(ltr_lig_mod, plotID, functionalGroup, year,
+                   ligninPercent, cellulosePercent), 
+            by = c("plotID", "functionalGroup", "year")) %>%
+  select(-gramsDMPerMeterSquared, -trappingDaysOk)
+# Write the file
+write.csv(ltrFlux_perTrap_perGroup_chem, paste(dir, 'litterfall_annual_with_chem.csv', sep = "/"), row.names = F)
+googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_litterfall/NEON_litterfall_all/litterfall_annual_with_chem")
+googledrive::drive_upload(paste(dir, "litterfall_annual_with_chem.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_litterfall/NEON_litterfall_all/", 
+                          type = "spreadsheet", verbose = FALSE)
+}
+
+
