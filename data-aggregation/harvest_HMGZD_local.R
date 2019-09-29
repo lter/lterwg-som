@@ -138,9 +138,9 @@ targets <- c(
   'observation_date',
   'observation_date_1',
   'observation_date_2',
-  'control_id',
-  'modification_date',
-  'agb'
+  'control_id' #,
+  # 'modification_date',
+  # 'agb'
   # 'mat',
   # 'wood_lit_c',
   # 'slope'
@@ -163,10 +163,40 @@ homogenizedData <- map(.x = homogenizedData, .f = cols_to_character)
 boundData <- bind_rows(homogenizedData)
 
 
+# tarball bulk processing -------------------------------------------------
+
+boundData <- boundData %>%
+  mutate(
+    lyr_c_to_n = case_when(
+      is.na(lyr_c_to_n) & lyr_n_tot != 0 ~ lyr_soc / lyr_n_tot,
+      TRUE ~ lyr_c_to_n 
+    ),
+    layer_mid = case_when(
+      is.na(layer_mid) ~ (layer_bot + layer_top) / 2,
+      TRUE ~ layer_mid 
+    ),
+    layer_thick_calc = case_when(
+      !is.na(layer_bot) & !is.na(layer_top) ~ abs(layer_bot - layer_top)
+    ),
+    # lyr_soc_stock_calc = case_when(
+    #   is.na(lyr_soc) ~ lyr_soc * bd_samp * layer_thick_calc * 100,
+    #   TRUE ~ lyr_soc
+    # ),
+    lit_cn = case_when(
+      is.na(lit_cn) & lit_n != 0 ~ lit_c / lit_n,
+      TRUE ~ lit_cn  
+    ),
+    bgb_cn = case_when(
+      is.na(bgb_cn) & bgb_n != 0 ~ bgb_c / bgb_n,
+      TRUE ~ bgb_cn  
+    )
+  )
+
+
 # write aggregated data to file -------------------------------------------
 
-write_csv(boundData, paste0('somCompositeData_', Sys.Date(), '.csv'))
 saveRDS(boundData, paste0('somCompositeData_', Sys.Date(), '.rds'))
+# write_csv(boundData, paste0('somCompositeData_', Sys.Date(), '.csv'))
 
 
 # upload aggregated data to Google Drive ----------------------------------
@@ -174,10 +204,10 @@ saveRDS(boundData, paste0('somCompositeData_', Sys.Date(), '.rds'))
 homogedAndBoundOutputID <- googledrive::drive_get('homoged_and_bound_output') %>%
   dplyr::pull(id)
 
-googledrive::drive_upload(media = paste0('somCompositeData_', Sys.Date(), '.csv'),
-                          path = as_id(homogedAndBoundOutputID),
-                          name = paste0('somCompositeData_', Sys.Date(), '.csv'))
-
 googledrive::drive_upload(media = paste0('somCompositeData_', Sys.Date(), '.rds'),
                           path = as_id(homogedAndBoundOutputID),
                           name = paste0('somCompositeData_', Sys.Date(), '.rds'))
+
+# googledrive::drive_upload(media = paste0('somCompositeData_', Sys.Date(), '.csv'),
+#                           path = as_id(homogedAndBoundOutputID),
+#                           name = paste0('somCompositeData_', Sys.Date(), '.csv'))
