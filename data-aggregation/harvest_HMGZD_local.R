@@ -176,12 +176,11 @@ boundData <- boundData %>%
       TRUE ~ layer_mid 
     ),
     layer_thick_calc = case_when(
-      !is.na(layer_bot) & !is.na(layer_top) ~ abs(layer_bot - layer_top)
+      !is.na(layer_bot) & !is.na(layer_top) & layer_bot >= 0 & layer_top >= 0 ~ (layer_bot - layer_top)
     ),
-    # lyr_soc_stock_calc = case_when(
-    #   is.na(lyr_soc) ~ lyr_soc * bd_samp * layer_thick_calc * 100,
-    #   TRUE ~ lyr_soc
-    # ),
+    lyr_soc_stock_calc = case_when(
+      is.na(lyr_soc_stock) & !is.na(lyr_soc) & !is.na(bd_samp) & !is.na(layer_thick_calc) & layer_thick_calc >= 0 ~ lyr_soc * bd_samp * layer_thick_calc * 100,
+      TRUE ~ lyr_soc_stock),
     lit_cn = case_when(
       is.na(lit_cn) & lit_n != 0 ~ lit_c / lit_n,
       TRUE ~ lit_cn  
