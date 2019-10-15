@@ -189,6 +189,19 @@ boundData <- boundData %>%
       is.na(bgb_cn) & bgb_n != 0 ~ bgb_c / bgb_n,
       TRUE ~ bgb_cn  
     ),
+    # salt, silt, clay calcs
+    sand = case_when(
+      is.na(sand) & !is.na(clay) & !is.na(silt) ~ 100 - (clay + silt),
+      TRUE ~ sand
+    ),
+    silt = case_when(
+      is.na(silt) & !is.na(clay) & !is.na(sand) ~ 100 - (clay + sand),
+      TRUE ~ silt 
+    ),
+    clay = case_when(
+      is.na(clay) & !is.na(silt) & !is.na(sand) ~ 100 - (silt + sand),
+      TRUE ~ clay  
+    ),
     time_series = toupper(time_series),
     gradient = toupper(gradient),
     merge_align = toupper(merge_align),
