@@ -193,8 +193,8 @@ boundData <- boundData %>%
     gradient = toupper(gradient),
     merge_align = toupper(merge_align),
     experiments = toupper(experiments)
-  ) # close mutate
-
+  ) %>%  # close mutate
+  rename('bd_methods_notes' = `^bd_`)
 
 # write aggregated data to file -------------------------------------------
 
