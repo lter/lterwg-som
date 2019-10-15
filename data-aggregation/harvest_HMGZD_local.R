@@ -188,8 +188,12 @@ boundData <- boundData %>%
     bgb_cn = case_when(
       is.na(bgb_cn) & bgb_n != 0 ~ bgb_c / bgb_n,
       TRUE ~ bgb_cn  
-    )
-  )
+    ),
+    time_series = toupper(time_series),
+    gradient = toupper(gradient),
+    merge_align = toupper(merge_align),
+    experiments = toupper(experiments)
+  ) # close mutate
 
 
 # write aggregated data to file -------------------------------------------
