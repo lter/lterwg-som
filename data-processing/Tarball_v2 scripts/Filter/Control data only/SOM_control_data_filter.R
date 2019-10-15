@@ -17,7 +17,7 @@ ctl_filter <- function(dataset_name, tar) {
   cfilt.df <- filter(tar, google_dir == dataset_name)
   
   # Identify "control" value
-  cfilt.ctl_val <- droplevels((unique(cfilt.df$control_id)))
+  cfilt.ctl_val <- droplevels(as.factor(unique(cfilt.df$control_id)))
   
   #Split control value into vector elements if comma separator present
   cfilt.ctl_val <- gsub(", ",",",cfilt.ctl_val)
@@ -81,7 +81,7 @@ ctl_filter <- function(dataset_name, tar) {
 }
 
 # Get the tarball
-tarball <- read.csv("C:/Users/drkpi/Desktop/tmp/SOM/somCompositeData_2019-04-29.csv")
+tarball <- readRDS("somCompositeData_2019-10-15.rds")
 
 # Identify the individual dataset names
 dsets <- na.omit(as.character(unique(tarball$google_dir))) #Remove som_testing_env and som_testing_envII ???
@@ -91,7 +91,7 @@ tarball_ctl_data <- do.call(rbind, lapply(dsets, ctl_filter, tarball))
 
 # Write tarball control data to .csv
   # ...set appropriate filepath and name
-write.csv(tarball_ctl_data, "DONT USE_prelim_SOM-CompositeData_Control-Only.csv")
+#write.csv(tarball_ctl_data, "DONT USE_prelim_SOM-CompositeData_Control-Only.csv")
 
 #For log of console notes, copy-paste console output to .txt file
 
