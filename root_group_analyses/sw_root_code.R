@@ -2,7 +2,7 @@
 ### Data Exploration: LTER-SOM ###
 ###    Sept 2019, SWeintraub   ###
 ##################################
-Jessicas edits
+Avni edits
 ### Reset workspace
 rm(list = ls())
 
