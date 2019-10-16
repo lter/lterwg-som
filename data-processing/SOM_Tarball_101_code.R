@@ -16,7 +16,7 @@ library(ggplot2)
 ########################################
 
  #Change path to wherever you have the tarball.csv stored locally
- data.all <- readRDS("/Users/wwieder/Desktop/lter_homogenized/somCompositeData_2019-10-15.rds")  
+ data.all <- readRDS("/Users/wwieder/Desktop/lter_homogenized/somCompositeData_2019-10-16.rds")  
 
   #Print out tarball column names
   colnames(data.all)[1:30]  #only the first 30 in this case

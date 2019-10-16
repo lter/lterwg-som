@@ -1,0 +1,77 @@
+Dataset: AND_10YR_CN
+Control_id value 'CTL' found in data level column: tx_L1
+Merged 3 rows with control_id matches out of 18 data rows in AND_10YR_CN
+---------------------------------------
+Dataset: AND_10YR_DenseFrac
+Control_id value 'CTL' found in data level column: tx_L1
+Merged 7 rows with control_id matches out of 42 data rows in AND_10YR_DenseFrac
+---------------------------------------
+Dataset: AND_15YR_CN
+Control_id value 'CO' found in data level column: tx_L1
+Merged 6 rows with control_id matches out of 44 data rows in AND_15YR_CN
+---------------------------------------
+Dataset: ARC1
+Control_id value 'Undisturbed' found in data level column: tx_L1
+Merged 131 rows with control_id matches out of 385 data rows in ARC1
+---------------------------------------
+Warning! No control_id matches found for ARC2
+ALERT! NO DATA INCLUDED FOR ARC2
+---------------------------------------
+Note! No control_id found for BcCZO
+Included all data for BcCZO, no experimental manipulation was perfomed 
+Merged 182 rows with control_id matches out of 182 data rows in BcCZO
+---------------------------------------
+Dataset: BES
+Control_id value 'Forest' found in data level column: L1
+Merged 64 rows with control_id matches out of 328 data rows in BES
+---------------------------------------
+Note! No control_id found for BNZ1
+Included all data for BNZ1, no experimental manipulation was perfomed 
+Merged 87 rows with control_id matches out of 87 data rows in BNZ1
+---------------------------------------
+Dataset: BNZ2
+Control_id value 'Min' found in data level column: L1
+Merged 50 rows with control_id matches out of 159 data rows in BNZ2
+---------------------------------------
+Dataset: BNZ3
+Control_id value 'Unmanaged' found in data level column: tx_L1
+Merged 353 rows with control_id matches out of 730 data rows in BNZ3
+---------------------------------------
+Dataset: BNZ4
+Control_id value 'c' found in data level column: tx_L1
+Merged 176 rows with control_id matches out of 356 data rows in BNZ4
+---------------------------------------
+Dataset: BOU_20YR_roots
+Control_id value 'Control' found in data level column: tx_L1
+Merged 30 rows with control_id matches out of 138 data rows in BOU_20YR_roots
+---------------------------------------
+Dataset: BOU_20YR_soilchem
+Control_id value 'Control' found in data level column: tx_L1
+Merged 15 rows with control_id matches out of 69 data rows in BOU_20YR_soilchem
+---------------------------------------
+Note! No control_id found for Calhoun
+Included all data for Calhoun, no experimental manipulation was perfomed 
+Merged 106 rows with control_id matches out of 106 data rows in Calhoun
+---------------------------------------
+Dataset: cap.survey_200
+Control_id value 'Desert' found in data level column: L1
+Merged 530 rows with control_id matches out of 1584 data rows in cap.survey_200
+---------------------------------------
+Note! No control_id found for CWT_ws7and2_soilCN
+Included all data for CWT_ws7and2_soilCN, no experimental manipulation was perfomed 
+Merged 1778 rows with control_id matches out of 1778 data rows in CWT_ws7and2_soilCN
+---------------------------------------
+Note! No control_id found for CWTgradient_forestfloor
+Included all data for CWTgradient_forestfloor, no experimental manipulation was perfomed 
+Merged 175 rows with control_id matches out of 175 data rows in CWTgradient_forestfloor
+---------------------------------------
+Note! No control_id found for NEON_megapitSOIL_a-master-database
+ALERT! NO DATA INCLUDED FOR NEON_megapitSOIL_a-master-database
+---------------------------------------
+Note! No control_id found for som_testing_env
+ALERT! NO DATA INCLUDED FOR som_testing_env
+---------------------------------------
+Dataset: som_testing_envII
+Control_id value 'CTL' found in data level column: tx_L1
+Merged 3 rows with control_id matches out of 18 data rows in som_testing_envII
+---------------------------------------
