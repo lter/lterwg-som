@@ -11,6 +11,10 @@ if (file.exists('/Users/sweintraub/')){
   dir1 <- ("/Users/sweintraub/Box/Conferences_Meetings/2018_LTER-SOM") 
 }
 
+if (file.exists('/Users/JM_1/')){
+  dir1 <- ("~/Documents/GitHub/lterwg-som/root_group_analyses") 
+}
+
 ### Load data
 som <- readRDS(paste(dir1, "somCompositeData_2019-10-13.rds", sep = "/"))
 landCov <- readxl::read_excel(paste(dir1, "NEONtowerSiteMetadata.xlsx", sep = "/"))
@@ -33,7 +37,7 @@ somNEONMegaSoil <- somNEON %>%
 somNEONMega <- bind_rows(somNEONMegaRoots, somNEONMegaSoil) %>%
   mutate(carbon_stock = ifelse(data_file=="megapit_roots", 
                                bgb_c_stock, 
-                               lyr_soc_stock_calc/100)) %>%
+                               lyr_soc_stock_calc/100)) %>% #divide by 100 was for graphing, don't do analyses on this
   select_if(not_all_na) %>%
   arrange(site_code)
 sum(is.na(somNEONMega$carbon_stock)) # 6 rows have no C
@@ -122,7 +126,7 @@ for (site in somNEONMegaRoots$site_code) {
   for (midpoint in df.roots.oneSite$layer_mid) {
     midpoint.horizon = NA
     
-    # get the horizon for a given midpoing
+    # get the horizon for a given midpoint
     for (horizon in df.soil.oneSite$hzn) {
       df.soil.oneSite.oneHorizon = df.soil.oneSite %>% 
         filter(hzn == horizon)
@@ -154,8 +158,8 @@ somNEONMegaSoil.withRoot <- somNEONMegaSoilSel %>%
 # Whole profile summed
 somNEONMegaSoil.withRoot.Profile <- somNEONMegaSoil.withRoot %>%
   group_by(site_code) %>%
-  summarize(bgb_c_stock = sum(bgb_c_stock, na.rm = T), 
-            lyr_soc_stock_calc = sum(lyr_soc_stock_calc, na.rm = T), 
+  summarize(bgb_c_stock_sum = sum(bgb_c_stock, na.rm = T), #Jessica changed columns to _sum
+            lyr_soc_stock_calc_sum = sum(lyr_soc_stock_calc, na.rm = T), 
             land_cover = first(Ecosystem.type))
 
 ### Plots ###
@@ -195,4 +199,97 @@ somNEONLitter <- somNEON %>%
 # roots only
 somNEONRoots <- somNEON %>%
   filter(!is.na(bgb)) %>% 
-  select_if(not_all_na)    
+  select_if(not_all_na)   
+
+
+
+
+############## Jessica's exploration
+#Objective 1: whole profile sum SOC ~ whole profile root SOC; site and network as random effects; roots, landcover, nutrients, pH, texture as fixed effects in full model
+
+
+#Objective 2: Does SOC~roots vary with depth? First, run with depth as covariate in full model. Next, slice by depth intervals and re-run model.
+
+#Objective 3: Does B(SOC~depth)~B(roots~depth)? With landcover, nutrients, soil texture as fixed effects.
+#Calc cumsum using root data by depth interval, then calc SOC cumsum using the horizon data
+
+#cum sum for root C stocks
+somNEONMegaRootsSelSumDepth <- somNEONMegaRootsSel %>% 
+  left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) %>%
+  left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, bgb_c_stock_sum),by="site_code") %>%
+  mutate(rootfrac = round((bgb_c_stock/bgb_c_stock_sum),2)) %>%
+  group_by(site_code) %>%
+  mutate(rootfrac_cumsum = round(cumsum(rootfrac),2))
+View(somNEONMegaRootsSelSumDepth)
+
+#cum sum for SOC stocks
+somNEONMegaSoilSelSumDepth <- somNEONMegaSoilSel %>% 
+  left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) %>%
+  left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, lyr_soc_stock_calc_sum),by="site_code") %>%
+  mutate(socfrac = round((lyr_soc_stock_calc/lyr_soc_stock_calc_sum),2)) %>%
+  group_by(site_code) %>%
+  mutate(socfrac_cumsum = round(cumsum(socfrac),2))
+View(somNEONMegaSoilSelSumDepth)
+
+#combine the cumsum dataframes, now root cumsum and soc cumsum are in the same dataframe with exact layer_bot for the measures
+somNEONMegaSoilRootSelSumDepth<- somNEONMegaSoilSelSumDepth %>% 
+  rbind(somNEONMegaRootsSelSumDepth)
+
+#plots for root beta curves
+somNEONMega1 <-  somNEONMegaSoilRootSelSumDepth %>%
+  filter(site_code%in%c("BART", 
+                        "HARV", 
+                        "SCBI",
+                        "SERC",
+                        "BLAN",
+                        "DSNY",
+                        "OSBS",
+                        "JERC",
+                        "LAJA",
+                        "GUAN",
+                        "STEI",
+                        "UNDE",
+                        "TREE",
+                        "UKFS",
+                        "KONZ",
+                        "KONA",
+                        "GRSM",
+                        "MLBS",
+                        "ORNL",
+                        "DELA",
+                        "TALL",
+                        "WOOD",
+                        "DCFS"))
+somNEONMega2 <- somNEONMegaSoilRootSelSumDepth %>%
+  filter(!site_code%in%c("BART", 
+                         "HARV", 
+                         "SCBI",
+                         "SERC",
+                         "BLAN",
+                         "DSNY",
+                         "OSBS",
+                         "JERC",
+                         "LAJA",
+                         "GUAN",
+                         "STEI",
+                         "UNDE",
+                         "TREE",
+                         "UKFS",
+                         "KONZ",
+                         "KONA",
+                         "GRSM",
+                         "MLBS",
+                         "ORNL",
+                         "DELA",
+                         "TALL",
+                         "WOOD",
+                         "DCFS"))
+ggplot(somNEONMega2, 
+       aes(x = socfrac_cumsum, 
+           y = layer_bot )) +
+  geom_point(pch = 21, color="black") + 
+  geom_point(aes(x=rootfrac_cumsum), color="blue")+
+  scale_y_reverse() + # puts 0 at the top
+  #scale_x_log10() +
+  facet_wrap(~ site_code, ncol = 8, scales = "free") +
+  theme_bw() # save 6 x 12
