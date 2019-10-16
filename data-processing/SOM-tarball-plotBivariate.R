@@ -9,8 +9,13 @@
 #Much of the data processing workflow here is done with the dplyr package. 
 
 #Load libraries
+library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(devtools)
+library(reshape2)
+#devtools::install_github("cardiomoon/ggiraphExtra")
+library(ggiraphExtra)
 
 ### Loading The Data
 ########################################
@@ -20,7 +25,6 @@ data.all <- readRDS("/Users/wwieder/Desktop/lter_homogenized/somCompositeData_20
 
 #Print out tarball column names
 colnames(data.all)[1:30]  #only the first 30 in this case
-
 # Unite site codes and location names
 data.all$full_name <- paste0(data.all$site_code," ",data.all$location_name)  #Concatenate strings
 data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove NA from strings
@@ -31,6 +35,182 @@ unique(as.numeric(data.all$map))
 unique(data.all$hzn)
 
 boxplot(data.all$map ~ data.all$full_name)
+boxplot(data.all$`15n` ~ data.all$full_name)
+hist(data.all$n_tot)
+plot(data.all$c_to_n, data.all$`15n`, ylim=c(-15,15),xlim=c(0,80), pch=16, cex=0.5)
+plot(data.all$n_tot, data.all$`15n`, ylim=c(-15,15),xlim=c(0,80), pch=16, cex=0.5)
+m  <- (lm(data.all$`15n` ~ data.all$n_tot ))
+m1 <- (lm(data.all$`15n` ~ data.all$c_to_n ))
+#group by MAT here, because site names not working
+m2 <- lm(data.all$`15n` ~ data.all$c_to_n  + data.all$mat)
+summary(m2)
+        
+abline(m1)
+
+require(ggiraph)
+require(ggiraphExtra)
+require(plyr)
+data.all$MAT <- as.numeric(data.all$mat)
+data.all$MAT2 <- data.all$mat
+data.all$MAT2[data.all$MAT<= 5]  <- '<5'
+data.all$MAT2[data.all$MAT > 5]  <- '>5'
+#data.all$MAT2[data.all$MAT > 15] <- 'hot'
+data.all$MAT2 <- as.factor(data.all$MAT2)
+
+data.all$MAP <- as.numeric(data.all$map)
+data.all$MAP2 <- data.all$map
+data.all$MAP2[data.all$MAP<= 1000] <- 'dry'
+data.all$MAP2[data.all$MAP > 1000] <- 'wet'
+
+data.all$PH <- data.all$ph_h2o
+data.all$PH[data.all$ph_h2o<= 7] <- 'acid'
+data.all$PH[data.all$ph_h2o > 7] <- 'base'
+
+data.neon <- data.all %>% 
+  filter(c_to_n    > 0) %>% 
+#  filter(layer_top >= 0)%>%
+  filter(network == "NEON")%>%
+  filter(!is.na(mat)) %>%
+  filter(!is.na(`15n`)) %>%
+  filter(!is.na(n_tot))
+as.factor(data.neon$mat)
+
+ggplot(data.neon, aes(x=1/c_to_n, y=`15n`)) + 
+  geom_point() +
+  #  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+  xlim(1/75, 0.15) +
+  geom_point(aes(colour=MAT2)) +
+  geom_smooth(aes(color=MAT2), 
+              method=lm, se=T, fullrange=TRUE) 
+#  geom_smooth(aes(), 
+#              method=lm, se=FALSE, fullrange=TRUE) 
+#  scale_colour_gradient2(low = "blue", mid="white",high = "red", midpoint = 10) +
+#  geom_point(aes(color=MAP2)) +
+#  ggPredict(m2,interactive=TRUE) +
+
+ggplot(data.neon, aes(x=n_tot, y=`15n`)) + 
+  geom_point() +
+  #  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+#  xlim(1/75, 0.15) +
+  geom_point(aes(colour=MAT2)) +
+  geom_smooth(aes(color=MAT2), 
+              method=lm, se=T, fullrange=TRUE) 
+
+# ---  look at changes of 15n through profiles --- 
+Summary.df <- data.neon %>% # Start by defining the original dataframe, AND THEN...
+  group_by(mat) %>% 
+  do(min15n = min(.$`15n`, na.rm=T),
+     max15n = max(.$`15n`, na.rm=T),
+     minCN = min(.$c_to_n, na.rm=T),
+     maxCN = max(.$c_to_n, na.rm=T),
+     minN = min(.$n_tot, na.rm=T),
+     maxN = max(.$n_tot, na.rm=T),
+     MAP = mean(.$MAP, na.rm=T),
+     MAT = mean(.$MAT, na.rm=T))
+
+data.neon$Layer_top <- as.numeric(data.neon$layer_top)
+range(data.neon$Layer_top)
+
+# quick and dirty changes in 15N and %N (using min and max values for each site)
+# this ignores how the data were actually collected (e.g. plot-level measurements)
+delta.df <- 
+  data.neon %>%  #Start by defining the original dataframe, AND THEN...
+  group_by(L1) %>% 
+  do(e = .$`15n` - min(.$`15n`, na.rm=T),
+     f = log(.$n_tot/ max(.$n_tot, na.rm=T)),
+     MAT = .$MAT) %>%
+  unnest()      #saves headache later?
+dput(head(delta.df))
+summary(delta.df)
+dim(delta.df)
+
+
+ggplot(delta.df, aes(x=(f), y=(e))) +
+  labs(x = 'ln f', 
+       y = expression(delta*s - delta*s0)) +
+  geom_point(aes(colour=L1))  +
+  geom_smooth(aes(colour = L1), method=lm, formula = y ~ x-1, 
+              se=FALSE, fullrange=FALSE) + 
+  geom_smooth(aes(colour = 'black'), method=lm, formula = y ~ x-1, 
+              se=TRUE, fullrange=TRUE, weight=3) 
+
+
+# accounts for structure of data (plots)
+# uses surface samples to calculate differences
+site.df <- 
+  data.neon %>%  #Start by defining the original dataframe, AND THEN...
+  group_by(L2) %>% 
+  do(e = .$`15n` - min(.$`15n`[.$Layer_top == 0], na.rm=T),
+     f = log(.$n_tot/ max(.$n_tot[.$Layer_top == 0], na.rm=T)),
+     L1  = .$L1, 
+     MAT = .$MAT) %>%
+  unnest()      #saves headache later?
+
+names(site.df)
+summary(site.df)
+
+(site.df$L1)
+site.df$L1 <- as.factor(site.df$L1)
+
+range(site.df$f)
+plot((site.df$f), site.df$e, col=as.numeric(site.df$L1))
+m <- lm(e~f-1, data=site.df)
+abline(m)
+summary(m)
+
+ggplot(site.df, aes(x=(f), y=(e))) +
+  labs(x = 'ln f', 
+       y = expression(delta*s - delta*s[0])) +
+  geom_point(aes(colour=L1))  +
+#  geom_smooth(aes(colour = L1), method=lm, formula = y ~ x-1, 
+#              se=FALSE, fullrange=FALSE) + 
+  geom_smooth(aes(colour = 'black', weight=5), method=lm, formula = y ~ x-1, 
+              se=TRUE, fullrange=TRUE) 
+
+
+xlim = range(site.df$f)
+ylim = range(site.df$e)
+plot(site.df$e[site.df$L1 == levels(site.df$L1)[1] ]~
+     site.df$f[site.df$L1 == levels(site.df$L1)[1] ], 
+     ylim=ylim, xlim=xlim)
+for (i in 1:length(Site.df$L2)) {
+  points(site.df$e[site.df$L1 == levels(site.df$L1)[i] ]~
+         site.df$f[site.df$L1 == levels(site.df$L1)[i] ], 
+         col=i)
+  m <- lm(site.df$e[site.df$L1 == levels(site.df$L1)[i] ]~
+          site.df$f[site.df$L1 == levels(site.df$L1)[i] ] -1)
+  print(paste( levels(site.df$L1)[i],summary(m)[[4]][[1]], summary(m)[[9]])) 
+  abline(m, col=i)
+}
+
+
+
+#-----------------------------------------
+
+range  <- as.numeric(Summary.df$max15n) - as.numeric(Summary.df$min15n)
+min15n <- as.numeric(Summary.df$min15n)
+maxCN  <- as.numeric(Summary.df$maxCN)
+MAT    <- as.numeric(Summary.df$MAT)
+MAP    <- as.numeric(Summary.df$MAP)
+par(mfrow=c(2,2), mar=c(4,4,1,1))
+plot(range~min15n, ylab='range 15N', xlab="min 15N")
+abline(lm(range~min15n))
+
+plot(range~maxCN, ylab='range 15N', xlab="maxCN")
+abline(lm(range~maxCN))
+
+plot(min15n~maxCN, ylab='min 15N', xlab="maxCN")
+abline(lm(min15n~maxCN))
+
+plot(min15n~MAT, ylab='min 15N', xlab="MAT")
+abline(lm(min15n~MAT))
+
+plot(maxCN~MAT)
+abline(lm(maxCN~MAT))
+
+range_15n <- tapply(min(data.neon$`15n`), data.neon$mat, na.rm=T)
+
+summary(data.all$mat)
 
 summary(data.all$soc) 
 org <- c('org','Organic','Oa','Oi','Oe') #etc
