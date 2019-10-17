@@ -67,7 +67,7 @@ library(googledrive)
 # options -----------------------------------------------------------------
 
 options(httr_oob_default=TRUE) # create out-of-band oauth token in server env
-
+options(scipen=999) # no sci. notation
 
 # identify homogenized data files -----------------------------------------
 
@@ -181,6 +181,9 @@ boundData <- boundData %>%
     lyr_soc_stock_calc = case_when(
       is.na(lyr_soc_stock) & !is.na(lyr_soc) & !is.na(bd_samp) & !is.na(layer_thick_calc) & layer_thick_calc >= 0 ~ lyr_soc * bd_samp * layer_thick_calc * 100,
       TRUE ~ lyr_soc_stock),
+    lyr_n_stock_calc = case_when(
+      is.na(lyr_n_tot_stock) & !is.na(lyr_n_tot) & !is.na(bd_samp) & !is.na(layer_thick_calc) & layer_thick_calc >= 0 ~ lyr_n_tot * bd_samp * layer_thick_calc * 100,
+      TRUE ~ lyr_n_tot_stock),
     lit_cn = case_when(
       is.na(lit_cn) & lit_n != 0 ~ lit_c / lit_n,
       TRUE ~ lit_cn  
