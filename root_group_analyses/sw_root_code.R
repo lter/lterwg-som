@@ -353,7 +353,7 @@ r2(mod3)
 #Avni's beta curve
 tgc <- (somNEONMegaSoilRootSelSumDepth[somNEONMegaSoilRootSelSumDepth$layer_bot!=0&!is.na(somNEONMegaSoilRootSelSumDepth$layer_bot),])
 ## I do "is.na and Depth!=0" just because I had a depth that was zero and the program didn't like it. Also I had NAs
-tgc_site<-filter(tgc, site_code=="ABBY")
+tgc_filt <-tgc %>% filter(!site_code %in% c("CLBJ", "JORN", "GUAN", "LAJA", "GRSM","TEAK","BARR","TOOL","PUUM","KONA")) #SW will get; these sites don't have enough depth data to calc beta
 
 ###Y(cumulative percent) = 1- Beta ^ d(depth)
 library(minqa)
@@ -372,14 +372,14 @@ min.rss.soc <- function(beta){
   sum((x-y)^2,na.rm=T)
 }
 
-r2.soc <- function(beta_site){
+r2.soc <- function(beta_site,tgc_site){
   x = tgc_site$socfrac_cumsum
   y = 1-beta_site^tgc_site$layer_bot
   summary(lm(x~y))$r.squared
 }
 
-r2.roots <- function(beta_site){
-  x = tgc_site$rootsfrac_cumsum
+r2.roots <- function(beta_site, tgc_site){
+  x = tgc_site$rootfrac_cumsum
   y = 1-beta^tgc_site$layer_bot
   summary(lm(x~y))$r.squared
 }
@@ -387,13 +387,20 @@ r2.roots <- function(beta_site){
 
 #a loop for calculating betas for each site
 results.list = list()
-for (site in tgc$site_code) {
+for (site in tgc_filt$site_code) {
   
   tgc_site <- filter(tgc, site_code == site)
   beta_site_roots <- bobyqa(0.1,min.rss.roots,0.01,1)$par
   beta_site_soc <- bobyqa(0.1,min.rss.soc,0.01,1)$par
-  r2_site_roots <- r2.roots(beta_site_roots)
-  r2_site_soc <- r2.soc(beta_site_soc)
+  
+  lhs <- tgc_site$rootfrac_cumsum
+  rhs <- 1-beta_site_roots^tgc_site$layer_bot
+  r2_site_roots <- summary(lm(lhs ~ rhs))$r.squared
+  
+  lhs <- tgc_site$socfrac_cumsum
+  rhs <- 1-beta_site_soc^tgc_site$layer_bot
+  r2_site_soc <- summary(lm(lhs ~ rhs))$r.squared
+  
   results.list[[site]] = tibble(beta_roots = beta_site_roots,
                                 beta_soc = beta_site_soc,
                                 r2_roots = r2_site_roots,
@@ -404,5 +411,26 @@ for (site in tgc$site_code) {
 beta.all<-bind_rows(results.list)
 View(beta.all)
 plot(beta.all$beta_roots,beta.all$beta_soc)
+
+#recreating plot from above, but adding beta curves
+lhs <- tgc_site$socfrac_cumsum
+rhs <- 1-beta_site_soc^tgc_site$layer_bot
+site_soc <- lm(lhs ~ rhs)
+pred_soc<-predict(site_soc)
+
+#lhs <- tgc_site$rootfrac_cumsum
+#rhs <- 1-beta_site_roots^tgc_site$layer_bot
+#site_roots <- lm(lhs ~ rhs)
+
+ggplot(somNEONMega2, 
+       aes(x = socfrac_cumsum, 
+           y = layer_bot )) +
+  geom_point(pch = 21, color="black") + 
+  geom_point(aes(x=rootfrac_cumsum), color="blue")+
+  geom_line()+
+  scale_y_reverse() + # puts 0 at the top
+  #scale_x_log10() +
+  facet_wrap(~ site_code, scales = "free") +
+  theme_bw() # save 6 x 12
 
 
