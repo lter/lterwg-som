@@ -358,14 +358,51 @@ tgc_site<-filter(tgc, site_code=="ABBY")
 ###Y(cumulative percent) = 1- Beta ^ d(depth)
 library(minqa)
 
-# a function to calculate beta for each site
-min.rss <- function(beta){
+# a function to calculate root beta for each site
+min.rss.roots <- function(beta){
   x = tgc_site$rootfrac_cumsum
   y = 1-beta^tgc_site$layer_bot
   sum((x-y)^2,na.rm=T)
 }
-beta <- bobyqa(0.9,min.rss,0.01,1)$par
-tgc$pred <- 100*(1-beta^tgc$layer_bot)
 
-tgc_betas<- tgc %>% group_by(site_code) %>%
-  summarize(beta = bobyqa(0.9,min.rss,0.01,1)$par) #this is calculating the same beta for all sites. why?
+# a function to calculate soil beta for each site
+min.rss.soc <- function(beta){
+  x = tgc_site$socfrac_cumsum
+  y = 1-beta^tgc_site$layer_bot
+  sum((x-y)^2,na.rm=T)
+}
+
+r2.soc <- function(beta_site){
+  x = tgc_site$socfrac_cumsum
+  y = 1-beta_site^tgc_site$layer_bot
+  summary(lm(x~y))$r.squared
+}
+
+r2.roots <- function(beta_site){
+  x = tgc_site$rootsfrac_cumsum
+  y = 1-beta^tgc_site$layer_bot
+  summary(lm(x~y))$r.squared
+}
+
+
+#a loop for calculating betas for each site
+results.list = list()
+for (site in tgc$site_code) {
+  
+  tgc_site <- filter(tgc, site_code == site)
+  beta_site_roots <- bobyqa(0.1,min.rss.roots,0.01,1)$par
+  beta_site_soc <- bobyqa(0.1,min.rss.soc,0.01,1)$par
+  r2_site_roots <- r2.roots(beta_site_roots)
+  r2_site_soc <- r2.soc(beta_site_soc)
+  results.list[[site]] = tibble(beta_roots = beta_site_roots,
+                                beta_soc = beta_site_soc,
+                                r2_roots = r2_site_roots,
+                                r2_soc = r2_site_soc,
+                                site_code = site)
+}
+
+beta.all<-bind_rows(results.list)
+View(beta.all)
+plot(beta.all$beta_roots,beta.all$beta_soc)
+
+
