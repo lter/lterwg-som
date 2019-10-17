@@ -22,7 +22,8 @@ get_latest_som <- function() {
 
 # access content of homoged_and_bound google dir --------------------------
 
-boundHomogedContent <- drive_ls(path = 'https://drive.google.com/open?id=1bQcTB8lZtE0vjuZ_kvPvDbHCyv0PLbt6')
+# boundHomogedContent <- drive_ls(path = 'https://drive.google.com/open?id=1bQcTB8lZtE0vjuZ_kvPvDbHCyv0PLbt6')
+boundHomogedContent <- drive_ls(path = 'homoged_and_bound_output')
 boundHomogedContentSummary <- boundHomogedContent$drive_resource %>% 
   {
     tibble(
@@ -52,8 +53,14 @@ tarballLatestFilename <- boundHomogedContentSummary %>%
 somTarball <- readRDS(tarballLatestFilename)
 
 
+# delete downloaded file --------------------------------------------------
+
+if (file.exists(tarballLatestFilename)) { file.remove(tarballLatestFilename) }
+
+
 # return tarball ----------------------------------------------------------
 
 return(somTarball)
+
 
 } # close function
