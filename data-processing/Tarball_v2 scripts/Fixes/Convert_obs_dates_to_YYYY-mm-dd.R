@@ -10,7 +10,7 @@ library(lubridate)
   # Also available from Google Drive @:
   #  https://drive.google.com/drive/folders/1bQcTB8lZtE0vjuZ_kvPvDbHCyv0PLbt6?usp=sharing
 
-  tarball <- readRDS("somCompositeData_2019-10-13.rds")
+  tarball <- readRDS("somCompositeData_2019-10-16.rds")
   
   #Filter for times series only
   df <- tarball %>% filter(., time_series == "YES" | time_series == "Yes")
@@ -62,12 +62,15 @@ library(lubridate)
  
 
 #graph
-  ggplot(df, aes(y=observation_date_fix, x=location_name, color=network)) + geom_point(size=3) +
+  
+  df2 <- df %>% filter(!is.na(lyr_soc))
+  
+  ggplot(df2, aes(y=observation_date_fix, x=site_code, color=network)) + geom_point(size=3) +
     theme(axis.text.x = element_text(angle = 90),
           axis.text.y = element_text(size = 14),
           legend.text=element_text(size=16)) +
     ggtitle("SOM Database Time Series Coverage") +
-    xlab("Location Name") + ylab("Year") 
+    xlab("Site Code") + ylab("Year") 
     
     
 

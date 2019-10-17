@@ -1,17 +1,27 @@
 ## Use to install soilharmonization package from github
-#library('devtools')
-#devtools::install_github("srearl/soilHarmonization")
+library('devtools')
+library(tidyverse)
 
+#install from master
+devtools::install_github("srearl/soilHarmonization")
 library('soilHarmonization')
+
+#install from branch
+#devtools::install_github("srearl/soilHarmonization", ref = "fix-biomass-units-conv")
+
+#units conversion table
+utbl <- unitsConversions %>% print(n = Inf)
+
 
 # USER INPUT
 ###############################################
 #Set path to temp folder
-temp_path <- 'C:/temp/SOM'
+#temp_path <- 'C:/temp/SOM'
+temp_path <- "C:/R_temp/SOM"
 
 #Set name of keykey to update
-data_folder <- 'AND_10YR_CN'
-key_file_name <- 'AND_DIRT_10YR_CN_key_Key'
+data_folder <- 'UMBS_DIRT_C_N_by_Plot_2004_2014'
+key_file_name <- 'UMBS_DIRT_C_N_2004_2014_Key_Key'
 
 ###############################################
 
@@ -36,4 +46,25 @@ data_homogenization(directoryName = data_folder,
 
 ### Check QC log and fix erors, re-homog as needed (delete homog and QC files before re-homog)
 
+
+
+digest      
+ellipsis    
+fs          
+fuzzyjoin   
+gargle      
+ggplot2     
+googledrive 
+hms         
+knitr       
+lifecycle   
+markdown    
+pkgconfig   
+rmarkdown   
+sys         
+tidyr       
+tinytex    
+xfun        
+xml2        
+zip         
 

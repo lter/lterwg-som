@@ -33,3 +33,4 @@ df.summary <- merge(df1,df2,by="google_dir")
 #Export summary tables
 write.csv(df.summary, "lat-long_summary.csv", row.names = F)
 
+getwd()
