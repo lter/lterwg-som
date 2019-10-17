@@ -80,14 +80,29 @@ ctl_filter <- function(dataset_name, tar) {
     return(cfilt.df[cfilt.rows,])
 }
 
+###How to use ftn ###
+
 # Get the tarball
-tarball <- readRDS("somCompositeData_2019-10-15.rds")
+ # tarball <- readRDS("somCompositeData_2019-10-15.rds")
 
 # Identify the individual dataset names
-dsets <- na.omit(as.character(unique(tarball$google_dir))) #Remove som_testing_env and som_testing_envII ???
+ # dsets <- na.omit(as.character(unique(tarball$google_dir))) #Remove som_testing_env and som_testing_envII ???
 
 # Run filter ftn on each dataset and create dataframe with all control data rows
-tarball_ctl_data <- do.call(rbind, lapply(dsets, ctl_filter, tarball))
+ # tarball_ctl_data <- do.call(rbind, lapply(dsets, ctl_filter, tarball))
+
+
+### As code block - COPY THIS ###
+  #tarball <- readRDS("somCompositeData_2019-10-15.rds")
+  #dsets <- na.omit(as.character(unique(tarball$google_dir)))
+  #tarball_ctl_data <- do.call(rbind, lapply(dsets, ctl_filter, tarball))
+
+
+
+
+
+
+
 
 # Write tarball control data to .csv
   # ...set appropriate filepath and name

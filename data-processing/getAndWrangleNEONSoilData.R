@@ -206,6 +206,8 @@ googledrive::drive_upload(paste(dir, "spatial_ltr.csv", sep = "/"), path = "~/LT
 {
 clim <- "1V34g10SSWND6mCFwOS1g9Q48LZR26ooi" # google fileID for climate data - PRISM for CONUS, met stations for AK and HI
 CLIM <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", clim))
+landCov <- "1vp6Ipd1qAzNQ3r_qONNTlG41aUuHK4A7"
+COV <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", landCov))
 }
 
 ### Make 'master' files with phys-chem combined plus possible predictor variables
@@ -258,6 +260,10 @@ megapit_biogeo <- left_join(x = megapit_biogeo, y = mgc_permegapit,
 intersect(colnames(megapit_biogeo), colnames(CLIM))
 megapit_biogeo <- left_join(x = megapit_biogeo, y = CLIM, 
                             by = c("siteID", "domainID")) # warning ok
+# Add biome (from TIS) and dominant plants (PHEN)
+intersect(colnames(megapit_biogeo), colnames(COV))
+megapit_biogeo <- left_join(x = megapit_biogeo, y = COV, 
+                            by = "siteID") # warning ok
 # Order by pit, then by horizon and remove unneeded vars
 megapit_biogeo <- arrange(megapit_biogeo, pitID, biogeoTopDepth) %>%
   select(-c(uid.x, uid.y, uid.x.x, uid.y.y, setDate, biogeoSampleType, bulkDensSampleType, 
@@ -266,9 +272,9 @@ megapit_biogeo <- arrange(megapit_biogeo, pitID, biogeoTopDepth) %>%
             soilProfileDescriberC, soilProfileDescriberD, soilProfileDescriberE, 
             soilProfileDescriberF))
 # Write the file - local + to google drive
-write.csv(megapit_biogeo, paste(dir, "megapit_all.csv", sep = "/"), row.names = F)
-googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_megapitSoil/NEON_megapitSOIL_a-master-database/megapit_all")
-googledrive::drive_upload(paste(dir, "megapit_all.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_megapitSoil/NEON_megapitSOIL_a-master-database/", 
+write.csv(megapit_biogeo, paste(dir, "megapit_soils_all.csv", sep = "/"), row.names = F)
+googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_megapitSoil/NEON_megapitSOIL_all/megapit_soils_all")
+googledrive::drive_upload(paste(dir, "megapit_soils_all.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_megapitSoil/NEON_megapitSOIL_all/", 
              type = "spreadsheet", verbose = FALSE)
 }
 
@@ -519,10 +525,14 @@ mpr_all_clean <- mpr_pit %>%
   left_join(mpr_reps, by = "primaryKey") %>%
   select(-primaryKey) %>%
   arrange(pitID, topDepth)
+# Add biome (from TIS) and dominant plants (PHEN)
+intersect(colnames(mpr_all_clean), colnames(COV))
+mpr_all_clean <- left_join(x = mpr_all_clean, y = COV, 
+                            by = c("siteID")) # warning ok
 # Write the file
 write.csv(mpr_all_clean, paste(dir, 'megapit_roots.csv', sep = "/"), row.names = F)
-googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_megapitRoots/NEON_megapitRoots_a-master-database/megapit_roots")
-googledrive::drive_upload(paste(dir, "megapit_roots.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_megapitRoots/NEON_megapitRoots_a-master-database/", 
+googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_megapitRoots/NEON_megapitRoots_all/megapit_roots")
+googledrive::drive_upload(paste(dir, "megapit_roots.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_megapitRoots/NEON_megapitRoots_all/", 
                           type = "spreadsheet", verbose = FALSE)
 }
 

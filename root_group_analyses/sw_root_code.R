@@ -2,7 +2,7 @@
 ### Data Exploration: LTER-SOM ###
 ###    Sept 2019, SWeintraub   ###
 ##################################
-Avni edits
+#Avni edits
 ### Reset workspace
 rm(list = ls())
 
@@ -17,7 +17,7 @@ if (file.exists('/Users/JM_1/')){
 
 ### Load data
 som <- readRDS(paste(dir1, "somCompositeData_2019-10-13.rds", sep = "/"))
-landCov <- readxl::read_excel(paste(dir1, "NEONtowerSiteMetadata.xlsx", sep = "/"))
+landCov <- read.csv(paste(dir1, "NEONtowerSiteMetadata.csv", sep = "/"))
 
 # filter to only NEON
 somNEON <- filter(som, network == "NEON")
@@ -207,7 +207,6 @@ somNEONRoots <- somNEON %>%
 ############## Jessica's exploration
 #Objective 1: whole profile sum SOC ~ whole profile root SOC; site and network as random effects; roots, landcover, nutrients, pH, texture as fixed effects in full model
 
-
 #Objective 2: Does SOC~roots vary with depth? First, run with depth as covariate in full model. Next, slice by depth intervals and re-run model.
 
 #Objective 3: Does B(SOC~depth)~B(roots~depth)? With landcover, nutrients, soil texture as fixed effects.
@@ -234,6 +233,10 @@ View(somNEONMegaSoilSelSumDepth)
 #combine the cumsum dataframes, now root cumsum and soc cumsum are in the same dataframe with exact layer_bot for the measures
 somNEONMegaSoilRootSelSumDepth<- somNEONMegaSoilSelSumDepth %>% 
   rbind(somNEONMegaRootsSelSumDepth)
+
+#calculate clay stocks
+somNEONMegaSoilRootSelSumDepthClayStock <- somNEONMegaSoilRootSelSumDepth %>%
+  mutate(lyr_claystock = clay*bd_samp*(layer_bot-layer_top))
 
 #plots for root beta curves
 somNEONMega1 <-  somNEONMegaSoilRootSelSumDepth %>%
@@ -291,5 +294,87 @@ ggplot(somNEONMega2,
   geom_point(aes(x=rootfrac_cumsum), color="blue")+
   scale_y_reverse() + # puts 0 at the top
   #scale_x_log10() +
-  facet_wrap(~ site_code, ncol = 8, scales = "free") +
+  facet_wrap(~ site_code, scales = "free") +
   theme_bw() # save 6 x 12
+
+#Jessica's stats section
+library(lmerTest)
+library(sjstats)
+library(car)
+#Objective 1: whole profile sum SOC ~ whole profile root SOC; site and network as 
+#random effects; roots, landcover, nutrients, pH, texture as fixed effects 
+#in full model
+somNEONMegaSoilRootCovariates <- somNEONMegaSoilRootSelSumDepth %>% #grabbing covariates
+  group_by(site_code) %>%
+  summarize(mat = mean(mat, na.rm = T), 
+            map = mean(map, na.rm = T), 
+            clay = mean(clay, na.rm=T),
+            layer_bot_max = max(layer_bot, na.rm=T),
+            sand = mean(sand, na.rm=T))
+
+clay<-somNEONMegaSoilRootSelSumDepth %>% #grabbing covariates
+  group_by(site_code) %>%
+  summarize(minclay = min(clay, na.rm=T),
+            maxclay = max(clay, na.rm=T),
+            stdevclay = sd(clay, na.rm=T))
+
+somNEONMegaSoilRoot_wholeprofilestats <- somNEONMegaSoil.withRoot.Profile %>% #joining covariates to the bgb and soc summed dataframe
+  left_join(somNEONMegaSoilRootCovariates, by="site_code")
+
+full.mod<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
+             bgb_c_stock_sum + land_cover + mat + map + clay + sand + (1|layer_bot_max))
+summary(full.mod)
+Anova(full.mod)
+AIC(full.mod)
+r2(full.mod)
+
+mod1<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
+                 bgb_c_stock_sum  + mat + map  + clay + (1|layer_bot_max))
+summary(mod1)
+Anova(mod1)
+AIC(mod1)
+r2(mod1)
+
+mod2<- lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
+               bgb_c_stock_sum  + mat + map  + (1|layer_bot_max))
+summary(mod2)
+Anova(mod2)
+AIC(mod2)
+r2(mod2)
+
+#Final model NOTE: try clay stocks instead of average clay
+mod3<- lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
+              bgb_c_stock_sum  + mat + clay  + (1|layer_bot_max))
+summary(mod3)
+Anova(mod3)
+AIC(mod3)
+r2(mod3)
+
+#Avni's beta curve
+tgc <- (somNEONMegaSoilRootSelSumDepth[somNEONMegaSoilRootSelSumDepth$layer_bot!=0&!is.na(somNEONMegaSoilRootSelSumDepth$layer_bot),])
+## I do "is.na and Depth!=0" just because I had a depth that was zero and the program didn't like it. Also I had NAs
+tgc_site<-filter(tgc, site_code=="BART")
+
+###Y(cumulative percent) = 1- Beta d(depth)
+library(minqa)
+
+#beta <- initialize as no of sites
+#n <- no sites
+
+n <- 1
+beta <- 1
+
+for (i in 1:n) {
+  beta[i] <- bobyqa(0.9,min.rss,0.6,1)$par
+}
+
+
+min.rss <- function(beta){
+  x = tgc_site$rootfrac_cumsum
+  y = tgc_site$layer_bot
+  sum((x-y)^2,na.rm=T)
+}
+beta <- bobyqa(0.9,min.rss,0.6,1)$par
+tgc$pred <- 100*(1-beta^tgc$layer_bot)
+
+
