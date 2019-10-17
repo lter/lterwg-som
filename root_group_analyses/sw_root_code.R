@@ -353,28 +353,19 @@ r2(mod3)
 #Avni's beta curve
 tgc <- (somNEONMegaSoilRootSelSumDepth[somNEONMegaSoilRootSelSumDepth$layer_bot!=0&!is.na(somNEONMegaSoilRootSelSumDepth$layer_bot),])
 ## I do "is.na and Depth!=0" just because I had a depth that was zero and the program didn't like it. Also I had NAs
-tgc_site<-filter(tgc, site_code=="BART")
+tgc_site<-filter(tgc, site_code=="ABBY")
 
-###Y(cumulative percent) = 1- Beta d(depth)
+###Y(cumulative percent) = 1- Beta ^ d(depth)
 library(minqa)
 
-#beta <- initialize as no of sites
-#n <- no sites
-
-n <- 1
-beta <- 1
-
-for (i in 1:n) {
-  beta[i] <- bobyqa(0.9,min.rss,0.6,1)$par
-}
-
-
+# a function to calculate beta for each site
 min.rss <- function(beta){
   x = tgc_site$rootfrac_cumsum
-  y = tgc_site$layer_bot
+  y = 1-beta^tgc_site$layer_bot
   sum((x-y)^2,na.rm=T)
 }
-beta <- bobyqa(0.9,min.rss,0.6,1)$par
+beta <- bobyqa(0.9,min.rss,0.01,1)$par
 tgc$pred <- 100*(1-beta^tgc$layer_bot)
 
-
+tgc_betas<- tgc %>% group_by(site_code) %>%
+  summarize(beta = bobyqa(0.9,min.rss,0.01,1)$par) #this is calculating the same beta for all sites. why?
