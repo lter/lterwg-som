@@ -25,13 +25,16 @@ somNEON <- filter(som, network == "NEON")
 # useful function for making the DF smaller, only keep variables with not all NA
 not_all_na <- function(x) any(!is.na(x))
 
-# Megapits - make plots, carbon with depth, roots and soil
+# Megapits - filtering megapits only, diameter, live/dead,
+# assuming 52% when we do not know root C
+# make plots, carbon with depth, roots and soil
 somNEONMegaRoots <- somNEON %>%
   filter(data_file%in%c("megapit_roots"),
          bgb_upperdiam%in%c("2","4"), 
          bgb_type == "live") %>%
   mutate(bgb_c = ifelse(is.na(bgb_c), 52, bgb_c),
          bgb_c_stock = bgb*(bgb_c*.01))
+# same thing for soils, filtering for soils only
 somNEONMegaSoil <- somNEON %>%
   filter(data_file%in%c("megapit_soils_all"))
 somNEONMega <- bind_rows(somNEONMegaRoots, somNEONMegaSoil) %>%
@@ -41,6 +44,7 @@ somNEONMega <- bind_rows(somNEONMegaRoots, somNEONMegaSoil) %>%
   select_if(not_all_na) %>%
   arrange(site_code)
 sum(is.na(somNEONMega$carbon_stock)) # 6 rows have no C
+#cutting in half so that multipanel can be seen
 somNEONMega1 <- somNEONMega %>%
   filter(site_code%in%c("BART", 
                         "HARV", 
@@ -350,10 +354,11 @@ Anova(mod3)
 AIC(mod3)
 r2(mod3)
 
-#Avni's beta curve
+#Beta curve calculations
 tgc <- (somNEONMegaSoilRootSelSumDepth[somNEONMegaSoilRootSelSumDepth$layer_bot!=0&!is.na(somNEONMegaSoilRootSelSumDepth$layer_bot),])
 ## I do "is.na and Depth!=0" just because I had a depth that was zero and the program didn't like it. Also I had NAs
-tgc_filt <-tgc %>% filter(!site_code %in% c("CLBJ", "JORN", "GUAN", "LAJA", "GRSM","TEAK","BARR","TOOL","PUUM","KONA")) #SW will get; these sites don't have enough depth data to calc beta
+tgc_filt <-tgc %>% filter(!site_code %in% c("CLBJ", "JORN", "GUAN", "LAJA", "GRSM","TEAK","BARR","TOOL","PUUM","KONA")) 
+#SW will get; these sites don't have enough depth data to calc beta; we need bulk density
 
 ###Y(cumulative percent) = 1- Beta ^ d(depth)
 library(minqa)
@@ -371,19 +376,6 @@ min.rss.soc <- function(beta){
   y = 1-beta^tgc_site$layer_bot
   sum((x-y)^2,na.rm=T)
 }
-
-r2.soc <- function(beta_site,tgc_site){
-  x = tgc_site$socfrac_cumsum
-  y = 1-beta_site^tgc_site$layer_bot
-  summary(lm(x~y))$r.squared
-}
-
-r2.roots <- function(beta_site, tgc_site){
-  x = tgc_site$rootfrac_cumsum
-  y = 1-beta^tgc_site$layer_bot
-  summary(lm(x~y))$r.squared
-}
-
 
 #a loop for calculating betas for each site
 results.list = list()
@@ -408,15 +400,33 @@ for (site in tgc_filt$site_code) {
                                 site_code = site)
 }
 
+#create the beta summary dataframe, add other site variables, save the csv
 beta.all<-bind_rows(results.list)
 View(beta.all)
-plot(beta.all$beta_roots,beta.all$beta_soc)
+beta.all<-beta.all %>%
+  left_join(somNEONMegaSoilRoot_wholeprofilestats, by= "site_code")
+write.csv(beta.all, "beta.all.csv")
+
+#the beta-by-beta plot
+ggplot(data=beta.all, aes(x=beta_roots, y=beta_soc))+
+  geom_point(aes(color=land_cover), size=3)+
+  geom_abline(slope=1,intercept=0)+
+  scale_x_continuous(limits=c(0.8,1))+
+  scale_y_continuous(limits=c(0.9,1))+
+  xlab(bquote(beta~Fine~root~biomass))+
+  ylab(bquote(beta~SOC~stock))+
+  guides(color=guide_legend(title="Land cover", title.theme = element_text(size=16, angle=0), label.theme = element_text(size=14, angle=0), ncol=2))+
+  theme_bw()+
+  theme(legend.position=c(0.7,0.2), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text=element_text(size=16),legend.title = element_text(size=16))
 
 #recreating plot from above, but adding beta curves
 lhs <- tgc_site$socfrac_cumsum
 rhs <- 1-beta_site_soc^tgc_site$layer_bot
 site_soc <- lm(lhs ~ rhs)
-pred_soc<-predict(site_soc)
+preds<-predict(site_soc, newmods=c(0.:1))
+preds<-as.data.frame(preds)
+preds$socfracpred<-c(0:1)
+
 
 #lhs <- tgc_site$rootfrac_cumsum
 #rhs <- 1-beta_site_roots^tgc_site$layer_bot
@@ -427,7 +437,7 @@ ggplot(somNEONMega2,
            y = layer_bot )) +
   geom_point(pch = 21, color="black") + 
   geom_point(aes(x=rootfrac_cumsum), color="blue")+
-  geom_line()+
+  geom_line(x=0:1, y=preds$pred)
   scale_y_reverse() + # puts 0 at the top
   #scale_x_log10() +
   facet_wrap(~ site_code, scales = "free") +
