@@ -15,9 +15,14 @@ if (file.exists('/Users/JM_1/')){
   dir1 <- ("~/Documents/GitHub/lterwg-som/") 
 }
 
+if (file.exists('C:/Users/vishr_000')){
+  dir1 <- ("C:/Users/vishr_000/Documents/GitHub/lterwg-som/") 
+}
+dir1
+
 ### Load data - if downloaded
 som <- readRDS(paste(dir1, "root_group_analyses/somCompositeData_2019-10-15.rds", sep = "/"))
-landCov <- read.csv(paste(dir1, "root_group_analyses/NEONtowerSiteMetadata.csv", sep = "/"))
+#landCov <- read.csv(paste(dir1, "root_group_analyses/NEONtowerSiteMetadata.csv", sep = "/"))#because the updated file already has landcover
 
 ### Load data - straight from google drive
 library(googledrive)
