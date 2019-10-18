@@ -8,16 +8,20 @@ rm(list = ls())
 
 ### Set paths
 if (file.exists('/Users/sweintraub/')){
-  dir1 <- ("/Users/sweintraub/Box/Conferences_Meetings/2018_LTER-SOM") 
+  dir1 <- ("/Users/sweintraub/Documents/GitHub/lterwg-som/root_group_analyses") 
 }
 
 if (file.exists('/Users/JM_1/')){
   dir1 <- ("~/Documents/GitHub/lterwg-som/root_group_analyses") 
 }
 
-### Load data
+### Load data - if downloaded
 som <- readRDS(paste(dir1, "somCompositeData_2019-10-13.rds", sep = "/"))
 landCov <- read.csv(paste(dir1, "NEONtowerSiteMetadata.csv", sep = "/"))
+
+### Load data - straight from google drive
+source(paste0(dir1,'data-processing/get_latest_som.R'))
+som <- get_latest_som()
 
 # filter to only NEON
 somNEON <- filter(som, network == "NEON")
@@ -182,26 +186,8 @@ ggplot(somNEONMegaSoil.withRoot.Profile, aes(x = lyr_soc_stock_calc,
 # Look at covariates - nutrients, texture, etc
 # root nitrogen vs soil nitrogen
 
-# Example for cumsum
-totalStemCount <- dplyr::summarize(group_by(tableA, siteID), stems_total = sum(num_stems))
-tableB <- left_join(tableA, totalStemCount, by = "siteID") %>%
-  mutate(relativeAbundance = round((num_stems/stems_total)*100,2), 
-         cumulativeAbundance = round(cumsum(relativeAbundance),2))
-
-# write files
-write.csv(somNEONRoots, paste(dir1, "Filtered_SOM_NEONroots_only.csv", sep = "/"))
-
-
-# litter only
-somNEONLitter <- somNEON %>%
-  filter(!is.na(anpp)) %>% 
-  select_if(not_all_na)
-# roots only
-somNEONRoots <- somNEON %>%
-  filter(!is.na(bgb)) %>% 
-  select_if(not_all_na)   
-
-
+# write files, if desired
+# write.csv(somNEONRoots, paste(dir1, "Filtered_SOM_NEONroots_only.csv", sep = "/"))
 
 
 ############## Jessica's exploration
@@ -372,7 +358,7 @@ for (i in 1:n) {
 min.rss <- function(beta){
   x = tgc_site$rootfrac_cumsum
   y = tgc_site$layer_bot
-  sum((x-y)^2,na.rm=T)
+  sum((x-y)^2, na.rm=T)
 }
 beta <- bobyqa(0.9,min.rss,0.6,1)$par
 tgc$pred <- 100*(1-beta^tgc$layer_bot)
