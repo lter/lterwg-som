@@ -8,18 +8,20 @@ rm(list = ls())
 
 ### Set paths
 if (file.exists('/Users/sweintraub/')){
-  dir1 <- ("/Users/sweintraub/Documents/GitHub/lterwg-som/root_group_analyses") 
+  dir1 <- ("/Users/sweintraub/Documents/GitHub/lterwg-som/") 
 }
 
 if (file.exists('/Users/JM_1/')){
-  dir1 <- ("~/Documents/GitHub/lterwg-som/root_group_analyses") 
+  dir1 <- ("~/Documents/GitHub/lterwg-som/") 
 }
 
 ### Load data - if downloaded
-som <- readRDS(paste(dir1, "somCompositeData_2019-10-13.rds", sep = "/"))
-landCov <- read.csv(paste(dir1, "NEONtowerSiteMetadata.csv", sep = "/"))
+som <- readRDS(paste(dir1, "root_group_analyses/somCompositeData_2019-10-15.rds", sep = "/"))
+landCov <- read.csv(paste(dir1, "root_group_analyses/NEONtowerSiteMetadata.csv", sep = "/"))
 
 ### Load data - straight from google drive
+library(googledrive)
+library(tidyverse)
 source(paste0(dir1,'data-processing/get_latest_som.R'))
 som <- get_latest_som()
 
