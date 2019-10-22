@@ -206,7 +206,7 @@ googledrive::drive_upload(paste(dir, "spatial_ltr.csv", sep = "/"), path = "~/LT
 {
 clim <- "1V34g10SSWND6mCFwOS1g9Q48LZR26ooi" # google fileID for climate data - PRISM for CONUS, met stations for AK and HI
 CLIM <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", clim))
-landCov <- "1vp6Ipd1qAzNQ3r_qONNTlG41aUuHK4A7"
+landCov <- "1bw976S4lEKJYKEX7LOFRL-IwPUlmdUd5"
 COV <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", landCov))
 }
 
