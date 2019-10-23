@@ -1,63 +1,42 @@
-# siteAggregation
-# try aggregating w/in nested experimental levels
+# Bulk Density pedotransfer function
 # Will Wieder
-# Oct 16, 2019
+# Oct, 2019
 #########################
 rm(list=ls())
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
 
-#get tarball
-source('/Users/wwieder/Will/git_repos_local/lterwg-som/data-processing/get_latest_som.R')
-tarball <- get_latest_som()
-#tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2019-10-17.rds")  
-tarball <- tarball %>% filter(google_dir != "NA")
+# get tarball, if needed
+#source('/Users/wwieder/Will/git_repos_local/lterwg-som/data-processing/get_latest_som.R')
+#tarball <- get_latest_som()
 
-#-- get control only --  
-source('/Users/wwieder/Will/git_repos_local/lterwg-som/data-processing/Tarball_v2 scripts/Filter/Control data only/SOM_control_data_filter.R')
-dsets <- na.omit(as.character(unique(tarball$google_dir)))
-data.all <- do.call(rbind, lapply(dsets, ctl_filter, tarball))
-data.all$eco
-# -- identify unique datasets -- 
-data.all$full_name <- paste0(data.all$site_code," ",data.all$location_name)  #Concatenate strings
-#data.all$full_name <- (data.all$google_dir)  
-data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove NA from strings
-(data.all$eco_region)
-site.id  <- as.character(unique(data.all$google_dir))
-site.id[1:3]
-site.id[40]
-names(data.all$land_cover)
-vars <- c('google_dir','site_code','full_name', 'map', 'mat', 'lat','long',
+#Read tarball, if already in working directory
+tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2019-10-17.rds")  
+tarball <- tarball %>% filter(google_dir != "NA")
+#NEON    <- tarball %>% filter(network == 'NEON')
+ds_init <- tarball %>% filter(google_dir == 'NEON_initialChar')
+
+vars <- c('google_dir','site_code','map', 'mat', 'lat','long',
           'layer_top', 'layer_bot', 'layer_mid', 'layer_thick_calc','land_cover',
           'lyr_soc', 'lyr_c_tot','lyr_n_tot', 'lyr_c_to_n', 'lyr_soc_stock_calc',
           'ph_h2o', 'ph_cacl','clay','sand','silt','hzn', 'bd_samp',
-          'L1','L2','L3','L4','L5',
-          'L1_level','L2_level','L3_level','L4_level','L5_level', 'eco_region')
-#  no treatment data here    'tx_L1','tx_L2','tx_L3','tx_L4','tx_L5','tx_L6',
-#                            'tx_L1_level','tx_L2_level','tx_L3_level',
-#                            'tx_L4_level','tx_L5_level','tx_L6_level') ))
-data.sub <- select(data.all, one_of(vars))
-# look at data levels for ssczo, #390-393, what level do we want to aggregate up to?
-# here we can look at some NEON data (google drive #40)
-df <- data.sub %>% filter(google_dir == site.id[40])
+          'L1','L1_level','eco_region')
+df <- select(ds_init, one_of(vars))
 names(df)
 unique(df$eco_region)
-lev <- unique(c(df$L1_level, df$L2_level,df$L3_level,df$L4_level,df$L5_level))
-lev
-unique(df$L1)
 
 #drop empty colums of data
 df <- df %>%
   discard(~all(is.na(.x))) %>%
   map_df(~.x)
 
-data.all$layer_thick_calc
+df$layer_thick_calc
 
 # This will aggregate all data up to L1, for each unique upper soil layer.
 # mess around with NEON init soil data
 df %>% 
-  distinct(full_name, L1_level, L1, layer_top, mat,map) %>%
+  distinct(site_code, L1_level, L1, layer_top, mat,map) %>%
   inner_join(df %>%
                group_by(L1, layer_top) %>%
                summarize_if(is.numeric, list(~mean(., na.rm=T), ~sd(., na.rm=T))), 
@@ -76,23 +55,110 @@ ggplot(filter(df, lyr_soc<12), aes(x=sand, y=(bd_samp))) +
 ## MLR-A Multiple linear regression bd = a+b·sand + c·sand^2 + d + e·log depth
 max(df$lyr_soc, na.rm=T)
 df$lyr_soc[df$lyr_soc>12] = NA   #mask out high C soils
-(df$hzn)
-df2 <- df[,1:25]
+df2 <- df
 df2$lyr_soc[df2$lyr_soc<=0] = NA   #mask out zero C soils
+#df2$bd_samp[df2$bd_samp<0.7] = NA   # as in Tranter paper, not sure this is warranted
+#df2$bd_samp[df2$bd_samp>1.8] = NA   
 names(df2)
+
 
 df2 <- df2[complete.cases(df2), ]
 
-df2$sand2 <- df2$sand^2
-df2$clay2 <- df2$clay^2
-bd_m0  <- lm(bd_samp~lyr_soc+log(layer_mid), data=df2)
-bd_m1a <- lm(bd_samp~sand+sand2+log(layer_mid), data=df2)
-bd_m1b <- lm(bd_samp~clay+clay2+log(layer_mid), data=df2)
-bd_m2a <- lm(bd_samp~sand+log(lyr_soc)+sand2+log(layer_mid), data=df2)
-bd_m2b <- lm(bd_samp~clay+log(lyr_soc)+clay2+log(layer_mid), data=df2)
-bd_m2c <- lm(bd_samp~silt+log(lyr_soc)+sand2+log(layer_mid), data=df2)
-bd_m3a <- lm(bd_samp~log(lyr_soc)*sand2+log(layer_mid), data=df2)
-bd_m3b <- lm(bd_samp~log(layer_mid)+clay2+log(lyr_soc)+sand+ph_h2o, data=df2)
+# easier to define this function with nls than lm
+# MLR from Tranter et al. 2007 Soil Use and Management
+# formula are not consistent in table 2, also won't converge using all sand...?
+# modified here to get convergence, but likely not correct
+m1   <- nls(bd_samp ~ a + b*clay + (c-sand)^2 * d + e*log(layer_mid), data=df2,  
+            start=list(a=1.35,b=4.5e-3, c=44.7, d=-6e-5, e = 6e-2))
+summary(m1)
+m1b  <- nls(bd_samp ~ a +  (c-sand)^2 * d + e*log(layer_mid), data=df2,  
+            start=list(a=1.35, c=44.7, d=-6e-5, e = 6e-2))
+summary(m1b)
+
+# from MLR_B1
+m2   <- nls(bd_samp ~ a + b*clay + c*lyr_soc + (d+sand)^2 * e + f*log(layer_mid), data=df2,  
+            start=list(a=1.2,b=2.1e-3, c=-0.143, d=-47.95, e = 6e-5, f=-0.043))
+# remove insignificant terms
+m2b   <- nls(bd_samp ~ a +  c*lyr_soc + (d+sand)^2 * e + f*log(layer_mid), data=df2,  
+            start=list(a=1.2, c=-0.143, d=-47.95,e = 6e-5, f=-0.043))
+summary(m2b)
+
+# Pm for conceptual model
+m3   <- nls(bd_samp ~ a + b*clay + ((c-sand)^2) + e*log(layer_mid), data=df2,  
+            start=list(a=1.35,b=4.5e-3, c=44.7, e = 6e-2))
+summary(m3)
+# now predict residuals with OM
+df2$r1 <- resid(m1)
+df2$r1b <- resid(m1b)
+m4 <- nls(r1 ~ a + b*log(lyr_soc) + c*log(layer_mid), data=df2, 
+          start=list(a=-0.217, b=-0.114, c=-0.077) )
+m4b <- nls(r1b ~ a + b*log(lyr_soc) + c*log(layer_mid), data=df2, 
+          start=list(a=-0.217, b=-0.114, c=-0.077) )
+
+
+# texture controls
+m0a   <- nls(bd_samp ~ a + b*sand + c*sand^2,  data=df2,  
+             start=list(a=1.35,b=4.5e-3, c=44.7))
+df2$r0a <- resid(m0a)
+# depth effects
+m0b     <- nls(r0a ~ d + e*log(layer_mid),  data=df2,  
+             start=list(d=-6e-5, e = 6e-2))
+df2$r0b <- resid(m0b)
+# OM controls
+m0c <- nls(r0b ~ a + b*log(lyr_soc) + c*log(layer_mid), data=df2, 
+           start=list(a=-0.217, b=-0.114, c=-0.077) )
+
+summary(m0a)
+summary(m0b)
+summary(m0c)
+df2$m0sum <- predict(m0a) + predict(m0b) + predict(m0c)
+lim=c(0.4,2)
+plot(df2$m0sum, df2$bd_samp, ylim=lim, xlim=lim,pch=16, cex=0.6)
+abline(0,1)
+
+summary(m1)
+summary(m2)
+summary(m3)
+summary(m4)
+summary(m4b)
+
+pm1 <- predict(m1)
+pm1b <- predict(m1b)
+pm2 <- predict(m2)
+pm2b <- predict(m2b)
+pm3 <- predict(m3)
+pm4 <- predict(m4)
+pm4b <- predict(m4b)
+
+bd_hat <- pm1 + pm4
+bd_hatb <- pm1b + pm4b
+lim=c(0.4,2)
+plot(bd_hat, df2$bd_samp, ylim=lim, xlim=lim,pch=16, cex=0.6)
+points(bd_hatb,df2$bd_samp, col = 2, pch=16, cex=0.6)
+points(df2$m0sum, df2$bd_samp, col=4 ,pch=16, cex=0.6)
+points(pm2, df2$bd_samp, col=3 ,pch=16, cex=0.6)
+points(pm2b, df2$bd_samp, col=5 ,pch=16, cex=0.6)
+abline(0,1)
+
+r0 <-df2$bd_samp -df2$m0sum  
+plot(r0~df2$bd_samp)
+abline(v=c(0.7,1.8))
+abline(h=0)
+max(bd_hat)
+
+plot(pm1, df2$bd_samp, ylim=lim, xlim=lim)
+points(pm2, df2$bd_samp,pch=16, col=2)
+
+
+# try here with simple linear regressions
+bd_m0  <- lm(bd_samp~lyr_soc+log(layer_mid)|, data=df2)
+bd_m1a <- lm(bd_samp~sand+I(sand^2)+log(layer_mid), data=df2)
+bd_m1b <- lm(bd_samp~clay+I(clay^2)+log(layer_mid), data=df2)
+bd_m2a <- lm(bd_samp~sand+log(lyr_soc)+I(clay^2)+log(layer_mid), data=df2)
+bd_m2b <- lm(bd_samp~clay+log(lyr_soc)+I(clay^2)+log(layer_mid), data=df2)
+bd_m2c <- lm(bd_samp~silt+log(lyr_soc)+I(sand^2)+log(layer_mid), data=df2)
+bd_m3a <- lm(bd_samp~log(lyr_soc)*I(sand^2)+log(layer_mid), data=df2)
+bd_m3b <- lm(bd_samp~log(layer_mid)+I(clay^2)+log(lyr_soc)+ph_h2o, data=df2)
 summary(bd_m0)
 summary(bd_m1a)
 summary(bd_m1b)
@@ -110,6 +176,7 @@ m2b_pred <- predict(bd_m2b)
 m3a_pred <- predict(bd_m3a)
 m3b_pred <- predict(bd_m3b)
 
+m0_resid <- resid(bd_m0)
 m1a_resid <- resid(bd_m1a)
 m1b_resid <- resid(bd_m1b)
 m2a_resid <- resid(bd_m2a)
@@ -131,6 +198,7 @@ points(m3b_pred,df2$bd_samp, pch=16, cex=0.4, col=3)
 abline(0,1, lty=2)
 
 #Still a significant trend in the residuals.  Why?
+plot(m0_resid ~ df2$bd_samp)
 plot(m1a_resid ~ df2$bd_samp)
 plot(m1b_resid ~ df2$bd_samp)
 plot(m2a_resid ~ df2$bd_samp)
