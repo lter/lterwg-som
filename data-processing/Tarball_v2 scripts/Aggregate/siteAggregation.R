@@ -65,8 +65,7 @@ df %>%
 
 
 # This will aggregate all data
-# there are all linds of problems with doing this, as many of the profiles are << 100 cm deep, 
-# with lots of missing data
+# there are all linds of problems with doing this, as many of the profiles are << 100 cm deep, with lots of missing data
 NEON_init <- df %>%
   distinct(site_code, L1_level, map, mat) %>%
   inner_join(df %>%
