@@ -245,7 +245,8 @@ boundData <- boundData %>%
       TRUE ~ FALSE
     )
   ) %>% 
-  ungroup()
+  ungroup() %>% 
+  select(-control_id_vec)
 
 # the NWT snow fence study is a special case when the control identifiers are
 # spread across two columns, and only the combination of the two identifers
