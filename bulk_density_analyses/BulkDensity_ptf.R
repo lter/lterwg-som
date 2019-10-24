@@ -14,9 +14,10 @@ library(dplyr)
 #Read tarball, if already in working directory
 tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2019-10-17.rds")  
 tarball <- tarball %>% filter(google_dir != "NA")
+unique(tarball$google_dir)
 #NEON    <- tarball %>% filter(network == 'NEON')
 ds_init <- tarball %>% filter(google_dir == 'NEON_initialChar')
-
+#ds_init <- tarball %>% filter(google_dir == 'NEON_megapitSOIL_all')
 vars <- c('google_dir','site_code','map', 'mat', 'lat','long',
           'layer_top', 'layer_bot', 'layer_mid', 'layer_thick_calc','land_cover',
           'lyr_soc', 'lyr_c_tot','lyr_n_tot', 'lyr_c_to_n', 'lyr_soc_stock_calc',
@@ -32,18 +33,9 @@ df <- df %>%
   map_df(~.x)
 
 df$layer_thick_calc
-
-# This will aggregate all data up to L1, for each unique upper soil layer.
-# mess around with NEON init soil data
-df %>% 
-  distinct(site_code, L1_level, L1, layer_top, mat,map) %>%
-  inner_join(df %>%
-               group_by(L1, layer_top) %>%
-               summarize_if(is.numeric, list(~mean(., na.rm=T), ~sd(., na.rm=T))), 
-                by=c('L1','layer_top') ) 
-
 names(df)
-ggplot(filter(df, lyr_soc<10), aes(x=lyr_soc, y=log10(bd_samp), colour=site_code)) + 
+
+ggplot(filter(df, lyr_soc<10), aes(x=lyr_soc, y=log10(bd_samp), colour=google_dir)) + 
   geom_point() +
   geom_smooth(method='lm') 
 
@@ -56,14 +48,15 @@ ggplot(filter(df, lyr_soc<12), aes(x=sand, y=(bd_samp))) +
 max(df$lyr_soc, na.rm=T)
 df$lyr_soc[df$lyr_soc>12] = NA   #mask out high C soils
 df2 <- df
-df2$lyr_soc[df2$lyr_soc<=0] = NA   #mask out zero C soils
-#df2$bd_samp[df2$bd_samp<0.7] = NA   # as in Tranter paper, not sure this is warranted
+#df2$lyr_soc[df2$lyr_soc<=0] = NA   #mask out zero C soils
+df2$bd_samp[df2$bd_samp<0.7] = NA   # as in Tranter paper, not sure this is warranted
 #df2$bd_samp[df2$bd_samp>1.8] = NA   
+#df2$layer_bot[df2$layer_bot>=100] = NA   #mask out deep horizons
 names(df2)
 
 
 df2 <- df2[complete.cases(df2), ]
-
+hist(sqrt(df2$clay^0.5))
 # easier to define this function with nls than lm
 # MLR from Tranter et al. 2007 Soil Use and Management
 # formula are not consistent in table 2, also won't converge using all sand...?
@@ -90,9 +83,9 @@ summary(m3)
 # now predict residuals with OM
 df2$r1 <- resid(m1)
 df2$r1b <- resid(m1b)
-m4 <- nls(r1 ~ a + b*log(lyr_soc) + c*log(layer_mid), data=df2, 
+m4 <- nls(r1 ~ a + b*(lyr_soc^0.5) + c*(layer_mid^0.5), data=df2, 
           start=list(a=-0.217, b=-0.114, c=-0.077) )
-m4b <- nls(r1b ~ a + b*log(lyr_soc) + c*log(layer_mid), data=df2, 
+m4b <- nls(r1b ~ a + b*(lyr_soc^0.5) + c*(layer_mid^0.5), data=df2, 
           start=list(a=-0.217, b=-0.114, c=-0.077) )
 
 
@@ -105,7 +98,7 @@ m0b     <- nls(r0a ~ d + e*log(layer_mid),  data=df2,
              start=list(d=-6e-5, e = 6e-2))
 df2$r0b <- resid(m0b)
 # OM controls
-m0c <- nls(r0b ~ a + b*log(lyr_soc) + c*log(layer_mid), data=df2, 
+m0c <- nls(r0b ~ a + b*(lyr_soc^0.5) + c*(layer_mid^0.5), data=df2, 
            start=list(a=-0.217, b=-0.114, c=-0.077) )
 
 summary(m0a)
@@ -149,9 +142,76 @@ max(bd_hat)
 plot(pm1, df2$bd_samp, ylim=lim, xlim=lim)
 points(pm2, df2$bd_samp,pch=16, col=2)
 
+# ------------------------------------------
+# use function from Rawls & Brakensiek 1985
+# bd = 100/{(LOI/0.224) + [(100-LOI)/Pb,m]
+#    where Pb,m is bulk density of mineral soil and a function of soil texture
+# ------------------------------------------
+range(df2$silt)
+bd_rb <- nls(bd_samp ~ (100/((lyr_soc/a)+(100-lyr_soc)/(b*(sand^0.5)+c*(clay^0.5)+d*(layer_mid^0.5))) ),
+             data=df2, start=list(a = 0.224, b=1,c=1,d=1) )
+#try making intercept term and pull depth out to higher level
+bd_rb1 <- nls(bd_samp ~ e + f*log(layer_mid)+ (100/((lyr_soc/a)+((100-lyr_soc)/(b*(sand^0.5)+c*(clay^0.5)+d*log(layer_mid)) ) ) ),
+             data=df2, start=list(a = 0.224, b=1,c=1,d=1,e=1,f=1) )
 
+#modified here to tune the soc part, uses bulk density of soc from paper above
+bd_rb2 <- nls(bd_samp ~ (100/((lyr_soc/a)+ (100-lyr_soc)/(b*(sand^0.5)+c*(clay^0.5))) ) +d*(layer_mid),
+             data=df2, start=list(a=1,b=1,c=1,d=1))
+summary(bd_rb)
+summary(bd_rb1)
+summary(bd_rb2)
+summary(lm(predict(bd_rb)~df2$bd_samp))
+plot(predict(bd_rb),df2$bd_samp, pch=16, cex=0.5, ylim=lim, xlim=lim)
+points(predict(bd_rb1),df2$bd_samp, pch=16, col=4, cex=0.5)
+points(predict(bd_rb2),df2$bd_samp, pch=16, col=2, cex=0.5)
+
+plot(resid(bd_rb)~df2$bd_samp, pch=16, cex=0.5)
+points(resid(bd_rb1)~df2$bd_samp, pch=16, cex=0.5, col=4)
+points(resid(bd_rb2)~df2$bd_samp, pch=16, cex=0.5, col=2)
+abline(lm(resid(bd_rb)~df2$bd_samp))
+abline(lm(resid(bd_rb1)~df2$bd_samp),col=4)
+abline(lm(resid(bd_rb2)~df2$bd_samp),col=3)
+abline(lm(r0~df2$bd_samp),col=4)
+abline(h=0)
+
+plot(resid(bd_rb1)~df2$layer_mid)
+abline(lm(resid(bd_rb1)~df2$layer_mid))
+# ------------------------------------------
 # try here with simple linear regressions
-bd_m0  <- lm(bd_samp~lyr_soc+log(layer_mid)|, data=df2)
+# ------------------------------------------
+plot(df2$sand,df2$bd_samp)
+plot(df2$clay,df2$bd_samp)
+
+m  <- lm(bd_samp~I(sand^0.5)*I(clay^0.5)*I((layer_mid)^0.5)*I(lyr_soc^0.5), data=df2)
+m1  <- lm(bd_samp~I(sand)*I(clay)*I((layer_mid))*I(lyr_soc), data=df2)
+summary(m)
+summary(m1)
+library(nlme)
+m2 <- lme(bd_samp~I(sand^0.5)+I(clay^0.5)+I(log(layer_mid)^0.5)+I(lyr_soc^0.5), random=~1|site_code, data=df2)
+summary(m2)
+bd_m <- predict(m)
+bd_m1 <- predict(m1)
+bd_m2 <- predict(m2)
+bd_r <- resid(m)
+bd_r1 <- resid(m1)
+bd_r2 <- resid(m2)
+plot(bd_m, df2$bd_samp, ylim=lim, xlim=lim, pch=16, cex=0.5)
+points(bd_m1, df2$bd_samp, col=2, pch=16 , cex=0.5)
+points(bd_m2, df2$bd_samp, col=4, pch=16 , cex=0.5)
+# this overfit model still shows systematic biases
+plot(bd_r~ df2$bd_samp, pch=16, cex=0.5, ylim=c(-0.8,0.8))
+abline(lm(bd_r~ df2$bd_samp))
+#points(r0~ df2$bd_samp,col=2, pch=16, cex=0.5)
+# fitting with a random effect of site makes thing better
+points(bd_r2~ df2$bd_samp,col=4, pch=16, cex=0.5)
+abline(lm(bd_r1~ df2$bd_samp),col=2)
+abline(lm(bd_r2~ df2$bd_samp),col=4)
+abline(lm(r0~ df2$bd_samp),col=2)  # from efforts above
+abline(h=0, lty=2)
+
+plot(bd_r~ df2$layer_mid, pch=16, cex=0.5, ylim=c(-0.8,0.8))
+
+bd_m0  <- lm(bd_samp~lyr_soc+log(layer_mid), data=df2)
 bd_m1a <- lm(bd_samp~sand+I(sand^2)+log(layer_mid), data=df2)
 bd_m1b <- lm(bd_samp~clay+I(clay^2)+log(layer_mid), data=df2)
 bd_m2a <- lm(bd_samp~sand+log(lyr_soc)+I(clay^2)+log(layer_mid), data=df2)
