@@ -212,6 +212,56 @@ boundData <- boundData %>%
   ) %>%  # close mutate
   rename('bd_methods_notes' = `^bd_`)
 
+
+# identify controls -------------------------------------------------------
+
+# identify controls based on the presence of the prescribed control identifer in
+# any of the experiment or treatment levels
+
+# experimentTreatmentVarSet <- c('L1','L2','L3','L4','L5','L6','tx_L1','tx_L2','tx_L3','tx_L4','tx_L5','tx_L6')
+
+boundData <- boundData %>% 
+  mutate(control_id = gsub(" ", "", control_id)) %>% 
+  rowwise() %>% 
+  mutate(control_id_vec = str_split(string = control_id, pattern = ",")) %>% 
+  mutate(
+    control_sample  = as.logical(NA),
+    control_sample = case_when(
+      (
+        (
+          L1 %in% control_id_vec |
+            tx_L1 %in% control_id_vec |
+            L2 %in% control_id_vec |
+            tx_L2 %in% control_id_vec |
+            L3 %in% control_id_vec |
+            tx_L3 %in% control_id_vec |
+            L4 %in% control_id_vec |
+            tx_L4 %in% control_id_vec |
+            L5 %in% control_id_vec |
+            tx_L5 %in% control_id_vec
+        ) &
+          !all(is.na(control_id_vec))
+      ) | grepl("no", experiments, ignore.case = T) ~ TRUE,
+      TRUE ~ FALSE
+    )
+  ) %>% 
+  ungroup()
+
+# the NWT snow fence study is a special case when the control identifiers are
+# spread across two columns, and only the combination of the two identifers
+# signifies a control. This as opposed to the above function, which identifies a
+# control if the control identifer is identified in any of the experiment or
+# treatment fields.
+
+boundData <- boundData %>% 
+  mutate(
+    control_sample = replace(control_sample, grepl("nwt_snowfence", google_dir, ignore.case = T), FALSE),
+    control_sample = case_when(
+      grepl("nwt_snowfence", google_dir, ignore.case = T) & grepl("no_snow", tx_L1, ignore.case = T) & grepl("cc", tx_L2, ignore.case = T) ~ TRUE,
+      TRUE ~ control_sample 
+    )
+  )
+
 # write aggregated data to file -------------------------------------------
 
 saveRDS(boundData, paste0('somCompositeData_', Sys.Date(), '.rds'))
