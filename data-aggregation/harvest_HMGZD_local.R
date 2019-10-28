@@ -263,6 +263,19 @@ boundData <- boundData %>%
     )
   )
 
+
+# replaced NutNet data to NA ----------------------------------------------
+
+# data for the following vars are duplicated across years but are only relevant
+# to the year of collection (i.e., the first year of the study); convert
+# duplicated data to NA
+
+NN_columns_to_clean <- c("bd_samp", "lyr_soc", "lyr_n_tot", "p_ex_1", "k", "ca", "na", "fe_HCl", "al", "ph_h2o")
+
+boundData <- boundData %>% 
+  mutate_at(.vars = NN_columns_to_clean, .funs = ~replace(., grepl("nutnet", network, ignore.case = T) & observation_date >= tx_start, NA))
+
+  
 # write aggregated data to file -------------------------------------------
 
 saveRDS(boundData, paste0('somCompositeData_', Sys.Date(), '.rds'))
