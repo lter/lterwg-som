@@ -88,7 +88,7 @@ somNEONMega1 <- somNEONMega %>%
 somNEONMega2 <- somNEONMega %>%
   filter(!site_code%in%neonSiteList1)
 
-# creat first plot of roots and soil with depth
+# create first plot of roots and soil with depth
 ggplot(somNEONMega2, 
        aes(x = carbon_stock, 
            y = layer_bot, 
@@ -150,21 +150,21 @@ somNEONMegaRootsSel.byHor <- somNEONMegaRootsSel %>%
 # Join to soil data - **********USE THIS TO COMPARE OTHER EDAPHIC VARS TO ROOTS*************
 somNEONMegaSoil.withRoot <- somNEONMegaSoilSel %>%
   left_join(somNEONMegaRootsSel.byHor, by = c("site_code", "hzn")) %>%
-  mutate(hzn_type = ifelse(grepl("^O", hzn), "organic", "mineral")) %>%
-  left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID"))
+  mutate(hzn_type = ifelse(grepl("^O", hzn), "organic", "mineral")) #%>%
+  #left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) #### HELP this line did not run, why is it here?
 
-# Whole profile summed
+# Whole profile summed for each horizon at each site
 somNEONMegaSoil.withRoot.Profile <- somNEONMegaSoil.withRoot %>%
-  group_by(site_code) %>%
+  group_by(site_code, hzn_type) %>% 
   summarize(bgb_c_stock_sum = sum(bgb_c_stock, na.rm = T), #Jessica changed columns to _sum
-            lyr_soc_stock_calc_sum = sum(lyr_soc_stock_calc, na.rm = T), 
-            land_cover = first(Ecosystem.type))
+            lyr_soc_stock_calc_sum = sum(lyr_soc_stock_calc, na.rm = T)) 
+            #land_cover = first(Ecosystem.type)) We left this out because Ecosystem.type is not working with the 10/15/19 tarball
 
 ### Plots ###
 # By horizon
-ggplot(somNEONMegaSoil.withRoot, aes(x = lyr_soc_stock_calc,
-                                     y = bgb_c_stock,
-                                     fill = Ecosystem.type)) + 
+ggplot(somNEONMegaSoil.withRoot, aes(y = lyr_soc_stock_calc,
+                                     x = bgb_c_stock)) +
+                                     #fill = Ecosystem.type)) + #Need to fix landCov and Ecosystem.type
   geom_point(pch = 21, size = 2) + 
   theme_bw() # save 4 x 6
 # By profile
@@ -194,7 +194,7 @@ ggplot(somNEONMegaSoil.withRoot.Profile, aes(x = lyr_soc_stock_calc,
 
 #cum sum for root C stocks
 somNEONMegaRootsSelSumDepth <- somNEONMegaRootsSel %>% 
-  left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) %>%
+  #left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) %>% LANDCOVER, ARGGHH
   left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, bgb_c_stock_sum),by="site_code") %>%
   mutate(rootfrac = round((bgb_c_stock/bgb_c_stock_sum),2)) %>%
   group_by(site_code) %>%
@@ -203,7 +203,7 @@ View(somNEONMegaRootsSelSumDepth)
 
 #cum sum for SOC stocks
 somNEONMegaSoilSelSumDepth <- somNEONMegaSoilSel %>% 
-  left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) %>%
+  #left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) %>% LANDCOVER
   left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, lyr_soc_stock_calc_sum),by="site_code") %>%
   mutate(socfrac = round((lyr_soc_stock_calc/lyr_soc_stock_calc_sum),2)) %>%
   group_by(site_code) %>%
@@ -241,7 +241,7 @@ library(car)
 #random effects; roots, landcover, nutrients, pH, texture as fixed effects 
 #in full model
 somNEONMegaSoilRootCovariates <- somNEONMegaSoilRootSelSumDepth %>% #grabbing covariates
-  group_by(site_code) %>%
+  group_by(site_code, hzn_type) %>%
   summarize(mat = mean(mat, na.rm = T), 
             map = mean(map, na.rm = T), 
             clay = mean(clay, na.rm=T),
@@ -257,12 +257,28 @@ clay<-somNEONMegaSoilRootSelSumDepth %>% #grabbing covariates
 somNEONMegaSoilRoot_wholeprofilestats <- somNEONMegaSoil.withRoot.Profile %>% #joining covariates to the bgb and soc summed dataframe
   left_join(somNEONMegaSoilRootCovariates, by="site_code")
 
+#### AVNI'S AGU TALK: Results for objective 1
 full.mod<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
-             bgb_c_stock_sum + land_cover + mat + map + clay + sand + (1|layer_bot_max))
+             bgb_c_stock_sum + hzn_type + mat + map + clay +  (1|layer_bot_max)) # removed land cover as a fixed effect
 summary(full.mod)
 Anova(full.mod)
 AIC(full.mod)
 r2(full.mod)
+vif(full.mod)
+plot(full.mod) #plotting residuals from the full mixed model, should have no relationship
+qqnorm(residuals(full.mod)) #checking normality of residuals, should be close to linear
+
+### Results for Objective 2
+
+full.mod<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
+                 bgb_c_stock_sum +  mat + map + clay +  (1|layer_bot_max)) # removed land cover as a fixed effect
+summary(full.mod)
+Anova(full.mod)
+AIC(full.mod)
+r2(full.mod)
+vif(full.mod)
+plot(full.mod) #plotting residuals from the full mixed model, should have no relationship
+qqnorm(residuals(full.mod))
 
 mod1<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
                  bgb_c_stock_sum  + mat + map  + clay + (1|layer_bot_max))
@@ -285,6 +301,31 @@ summary(mod3)
 Anova(mod3)
 AIC(mod3)
 r2(mod3)
+
+####### Figure 2, differences by horizon
+# Filter out horizon
+
+#cum sum for root C stocks
+somNEONMegaRootsSelSumDepth <- somNEONMegaRootsSel %>% 
+  #left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) %>% LANDCOVER, ARGGHH
+  left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, bgb_c_stock_sum),by="site_code") %>%
+  mutate(rootfrac = round((bgb_c_stock/bgb_c_stock_sum),2)) %>%
+  group_by(site_code) %>%
+  mutate(rootfrac_cumsum = round(cumsum(rootfrac),2))
+View(somNEONMegaRootsSelSumDepth)
+
+#cum sum for SOC stocks
+somNEONMegaSoilSelSumDepth <- somNEONMegaSoilSel %>% 
+  #left_join(select(landCov, ID, Ecosystem.type), by = c("site_code" = "ID")) %>% LANDCOVER
+  left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, lyr_soc_stock_calc_sum),by="site_code") %>%
+  mutate(socfrac = round((lyr_soc_stock_calc/lyr_soc_stock_calc_sum),2)) %>%
+  group_by(site_code) %>%
+  mutate(socfrac_cumsum = round(cumsum(socfrac),2))
+View(somNEONMegaSoilSelSumDepth)
+
+#combine the cumsum dataframes, now root cumsum and soc cumsum are in the same dataframe with exact layer_bot for the measures
+somNEONMegaSoilRootSelSumDepth<- somNEONMegaSoilSelSumDepth %>% 
+  rbind(somNEONMegaRootsSelSumDepth)
 
 #Avni's beta curve
 tgc <- (somNEONMegaSoilRootSelSumDepth[somNEONMegaSoilRootSelSumDepth$layer_bot!=0&!is.na(somNEONMegaSoilRootSelSumDepth$layer_bot),])
