@@ -501,7 +501,7 @@ ggplot(data=beta.all, aes(x=beta_roots, y=beta_soc))+
   
 #Stats for Objective 3: Is root beta correlated to soil beta, and what covariates explain the variation?
 
-mod <- lm(data=beta.all, beta_soc ~ beta_roots + land_cover)
+mod <- lm(data=beta.all, beta_soc ~ beta_roots + map + mat + clay)
 summary(mod)  
 Anova(mod)
 vif(mod)
