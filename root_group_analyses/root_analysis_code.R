@@ -404,32 +404,110 @@ somNEONMegaSoilRootSelSumDepth<- somNEONMegaSoilSelSumDepth %>%
 #removing layer_bot=0 and NA
 tgc <- (somNEONMegaSoilRootSelSumDepth[somNEONMegaSoilRootSelSumDepth$layer_bot!=0&!is.na(somNEONMegaSoilRootSelSumDepth$layer_bot),])
 ## I do "is.na and Depth!=0" just because I had a depth that was zero and the program didn't like it. Also I had NAs
-
-#Checking one site
-tgc_site<-filter(tgc, site_code=="ABBY")
+tgc_filt <-tgc %>% filter(!site_code %in% c("CLBJ", "JORN", "GUAN", "LAJA", "GRSM","TEAK","BARR","TOOL","PUUM","KONA")) #SW will get; these sites don't have enough depth data to calc beta
 
 #Calculating betas for each site
 ###Y(cumulative percent) = 1- Beta d(depth)
 library(minqa)
 
-#beta <- initialize as no of sites
-#n <- no sites
+# a function to calculate root beta for each site
+  min.rss.roots <- function(beta){
+    x = tgc_site$rootfrac_cumsum
+    y = 1-beta^tgc_site$layer_bot
+    sum((x-y)^2,na.rm=T)
+  }
+ 
+# a function to calculate soil beta for each site
+  min.rss.soc <- function(beta){
+    x = tgc_site$socfrac_cumsum
+    y = 1-beta^tgc_site$layer_bot
+    sum((x-y)^2,na.rm=T)
+  }
+  
+#Calculating r2
+  r2.soc <- function(beta_site,tgc_site){
+    x = tgc_site$socfrac_cumsum
+    y = 1-beta_site^tgc_site$layer_bot
+    summary(lm(x~y))$r.squared
+  }
+  
+  r2.roots <- function(beta_site, tgc_site){
+    x = tgc_site$rootsfrac_cumsum
+    y = 1-beta^tgc_site$layer_bot
+    summary(lm(x~y))$r.squared
+  }
+  
+  
+#a loop for calculating betas for each site
+  results.list = list()
+  for (site in tgc_filt$site_code) {
+    
+    tgc_site <- filter(tgc, site_code == site)
+    beta_site_roots <- bobyqa(0.1,min.rss.roots,0.01,1)$par
+    beta_site_soc <- bobyqa(0.1,min.rss.soc,0.01,1)$par
+    lhs <- tgc_site$rootfrac_cumsum
+    rhs <- 1-beta_site_roots^tgc_site$layer_bot
+    r2_site_roots <- summary(lm(lhs ~ rhs))$r.squared
+    lhs <- tgc_site$socfrac_cumsum
+    rhs <- 1-beta_site_soc^tgc_site$layer_bot
+    r2_site_soc <- summary(lm(lhs ~ rhs))$r.squared
+    results.list[[site]] = tibble(beta_roots = beta_site_roots,
+                                  beta_soc = beta_site_soc,
+                                  r2_roots = r2_site_roots,
+                                  r2_soc = r2_site_soc,
+                                  site_code = site)
+  }
+  
+  beta.all<-bind_rows(results.list)
+  View(beta.all)
+  plot(beta.all$beta_roots,beta.all$beta_soc)
+  
+#Adding covariates and making a csv file to store the beta values  
+beta.all<-beta.all %>%
+  left_join(somNEONMegaSoilRoot_wholeprofilestats, by= "site_code")
+write.csv(beta.all, "beta.all.csv")
+beta.all<-read.csv("beta.all.csv") #this is based on the 10-15-19 tarball
+  
+#the beta-by-beta plot
+ggplot(data=beta.all, aes(x=beta_roots, y=beta_soc))+
+    geom_point(aes(color=land_cover), size=3)+
+    geom_abline(slope=1,intercept=0)+
+    xlab(bquote(beta~Fine~root~biomass))+
+    ylab(bquote(beta~SOC~stock))+
+    guides(color=guide_legend(title="Land cover", title.theme = element_text(size=16, angle=0), label.theme = element_text(size=14, angle=0), ncol=2))+
+    theme_bw()+
+    theme(legend.position=c(0.7,0.2), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text=element_text(size=16),legend.title = element_text(size=16))
 
-n <- 47
-beta <- 1
+#Site-specific plots with root and soc beta curves
+  lhs <- tgc_site$socfrac_cumsum
+  rhs <- 1-beta_site_soc^tgc_site$layer_bot
+  site_soc <- lm(lhs ~ rhs)
+  pred_soc<-predict(site_soc)
+  
+  #lhs <- tgc_site$rootfrac_cumsum
+  #rhs <- 1-beta_site_roots^tgc_site$layer_bot
+  #site_roots <- lm(lhs ~ rhs)
+  
+  ggplot(somNEONMega1, 
+         aes(x = socfrac_cumsum, 
+             y = layer_bot )) +
+    geom_point(pch = 21, color="black") + 
+    geom_point(aes(x=rootfrac_cumsum), color="blue")+
+    geom_line()+
+    scale_y_reverse() + # puts 0 at the top
+    #scale_x_log10() +
+    facet_wrap(~ site_code, scales = "free") +
+    theme_bw() # save 6 x 12
+  
+#Stats for Objective 3: Is root beta correlated to soil beta, and what covariates explain the variation?
 
-for (i in 1:n) {
-  beta[i] <- bobyqa(0.9,min.rss,0.6,1)$par
-}
+mod <- lm(data=beta.all, beta_soc ~ beta_roots + land_cover)
+summary(mod)  
+Anova(mod)
+vif(mod)
 
+mod.reduced <- lmer(data=beta.all, beta_soc ~ beta_roots + land_cover + mat + (1|layer_bot_max))
 
-min.rss <- function(beta){
-  x = tgc_site$rootfrac_cumsum
-  y = tgc_site$layer_bot
-  sum((x-y)^2, na.rm=T)
-}
-
-beta <- bobyqa(0.9,min.rss,0.6,1)$par
-tgc$pred <- 100*(1-beta^tgc$layer_bot)
-
-
+summary(mod.reduced)  
+Anova(mod.reduced)
+vif(mod.reduced)
