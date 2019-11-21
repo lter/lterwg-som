@@ -12,7 +12,7 @@ if (file.exists('/Users/sweintraub/')){
 }
 
 if (file.exists('/Users/JM_1/')){
-  dir1 <- ("~/Volumes/Moore HD/GitHub/lterwg-som") #This isn't working, I think it doesn't like the space in my external HD name
+  dir1 <- ("/Volumes/MooreHD/GitHub/lterwg-som/") #This isn't working, I think it doesn't like the space in my external HD name
 }
 
 if (file.exists('C:/Users/vishr_000')){
@@ -64,11 +64,11 @@ neonSiteList1 <- c("BART",
 # Megapits - creating dataframes for making plots, carbon with depth, roots and soil
 # have to include 4 diam because otherwise some sites would be lost
 somNEONMegaRoots <- somNEON %>%
-  filter(data_file%in%c("megapit_roots"),
-         bgb_upperdiam%in%c("2","4"), 
-         bgb_type == "live") %>%
-  mutate(bgb_c = ifelse(is.na(bgb_c), 52, bgb_c),
-         bgb_c_stock = bgb*(bgb_c*.01))
+  filter(data_file%in%c("megapit_roots"))
+        # bgb_upperdiam%in%c("2","4"), 
+       #  bgb_type == "live") %>%
+ # mutate(bgb_c = ifelse(is.na(bgb_c), 52, bgb_c),
+   #      bgb_c_stock = bgb*(bgb_c*.01))
 
 somNEONMegaSoil <- somNEON %>%
   filter(data_file%in%c("megapit_soils_all"))
