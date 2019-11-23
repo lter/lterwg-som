@@ -26,3 +26,5 @@ vignettes/*.pdf
 # MAC
 *.DS_Store
 lterwg-som.Rproj
+# tarball
+*.rds
