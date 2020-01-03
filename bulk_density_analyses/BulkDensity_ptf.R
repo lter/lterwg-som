@@ -7,12 +7,21 @@ library(ggplot2)
 library(tidyverse)
 library(dplyr)
 
+### Set paths
+if (file.exists('/Users/sweintraub/')){
+  dir1 <- ("/Users/sweintraub/Documents/GitHub/lterwg-som/") 
+}
+
+if (file.exists('/Users/wwieder/')){
+  dir1 <- ("/Users/wwieder/Will/git_repos_local/lterwg-som/") 
+}
+
 # get tarball, if needed
-#source('/Users/wwieder/Will/git_repos_local/lterwg-som/data-processing/get_latest_som.R')
-#tarball <- get_latest_som()
+source(paste0(dir1,'data-processing/get_latest_som.R'))
+tarball <- get_latest_som()
 
 #Read tarball, if already in working directory
-tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2019-10-17.rds")  
+#tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2019-10-17.rds")  
 tarball <- tarball %>% filter(google_dir != "NA")
 unique(tarball$google_dir)
 #NEON    <- tarball %>% filter(network == 'NEON')
@@ -25,52 +34,57 @@ vars <- c('google_dir','site_code','map', 'mat', 'lat','long',
           'L1','L1_level','eco_region')
 df <- select(ds_init, one_of(vars))
 names(df)
-unique(df$eco_region)
+unique(df$eco_region) # missing for now but SW can add
 
 #drop empty colums of data
 df <- df %>%
   discard(~all(is.na(.x))) %>%
   map_df(~.x)
 
-df$layer_thick_calc
 names(df)
+df$layer_thick_calc
 
+#plot soc vs bd, mineral soils only (C < 10%)
 ggplot(filter(df, lyr_soc<10), aes(x=lyr_soc, y=log10(bd_samp), colour=google_dir)) + 
   geom_point() +
-  geom_smooth(method='lm') 
+  geom_smooth(method='lm') # relationship has a lot of noise
 
+#plot sand vs bd, mineral soils only (C < 12%)
 names(df)
 ggplot(filter(df, lyr_soc<12), aes(x=sand, y=(bd_samp))) + 
   geom_point() +
-  geom_smooth(method='lm') 
+  geom_smooth(method='lm') # seems like a total point cloud
 
-## MLR-A Multiple linear regression bd = a+b·sand + c·sand^2 + d + e·log depth
-max(df$lyr_soc, na.rm=T)
-df$lyr_soc[df$lyr_soc>12] = NA   #mask out high C soils
-df2 <- df
-#df2$lyr_soc[df2$lyr_soc<=0] = NA   #mask out zero C soils
-df2$bd_samp[df2$bd_samp<0.7] = NA   # as in Tranter paper, not sure this is warranted
-#df2$bd_samp[df2$bd_samp>1.8] = NA   
-#df2$layer_bot[df2$layer_bot>=100] = NA   #mask out deep horizons
+### MLR-A Multiple linear regression bd = a+b·sand + c·sand^2 + d + e·log depth
+# filter DF
+max(df$lyr_soc, na.rm=T) # 60.7%
+df2 <- df %>%
+  filter(lyr_soc<12) %>% #drop high C soils
+  filter(bd_samp>0.7) # as in Tranter paper, not sure this is warranted
+#other filtering to consider
+#df2$lyr_soc[df2$lyr_soc<=0] = NA  #mask out zero C soils
+#df2$bd_samp[df2$bd_samp>1.8] = NA  #mask out very dense soils
+#df2$layer_bot[df2$layer_bot>=100] = NA  #mask out deep horizons
 names(df2)
-
-
-df2 <- df2[complete.cases(df2), ]
+df2 <- df2[complete.cases(df2), ] # only keep rows where all cols populated, 56% of the df
 hist(sqrt(df2$clay^0.5))
-# easier to define this function with nls than lm
+
 # MLR from Tranter et al. 2007 Soil Use and Management
+# easier to define this function with nls than lm
 # formula are not consistent in table 2, also won't converge using all sand...?
 # modified here to get convergence, but likely not correct
 m1   <- nls(bd_samp ~ a + b*clay + (c-sand)^2 * d + e*log(layer_mid), data=df2,  
             start=list(a=1.35,b=4.5e-3, c=44.7, d=-6e-5, e = 6e-2))
 summary(m1)
+# remove b, high P value
 m1b  <- nls(bd_samp ~ a +  (c-sand)^2 * d + e*log(layer_mid), data=df2,  
             start=list(a=1.35, c=44.7, d=-6e-5, e = 6e-2))
-summary(m1b)
+summary(m1b) # now all are significant
 
 # from MLR_B1
 m2   <- nls(bd_samp ~ a + b*clay + c*lyr_soc + (d+sand)^2 * e + f*log(layer_mid), data=df2,  
             start=list(a=1.2,b=2.1e-3, c=-0.143, d=-47.95, e = 6e-5, f=-0.043))
+summary(m2)
 # remove insignificant terms
 m2b   <- nls(bd_samp ~ a +  c*lyr_soc + (d+sand)^2 * e + f*log(layer_mid), data=df2,  
             start=list(a=1.2, c=-0.143, d=-47.95,e = 6e-5, f=-0.043))
@@ -87,7 +101,6 @@ m4 <- nls(r1 ~ a + b*(lyr_soc^0.5) + c*(layer_mid^0.5), data=df2,
           start=list(a=-0.217, b=-0.114, c=-0.077) )
 m4b <- nls(r1b ~ a + b*(lyr_soc^0.5) + c*(layer_mid^0.5), data=df2, 
           start=list(a=-0.217, b=-0.114, c=-0.077) )
-
 
 # texture controls
 m0a   <- nls(bd_samp ~ a + b*sand + c*sand^2,  data=df2,  
@@ -176,6 +189,9 @@ abline(h=0)
 
 plot(resid(bd_rb1)~df2$layer_mid)
 abline(lm(resid(bd_rb1)~df2$layer_mid))
+
+
+
 # ------------------------------------------
 # try here with simple linear regressions
 # ------------------------------------------
