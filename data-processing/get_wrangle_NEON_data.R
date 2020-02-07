@@ -1,36 +1,37 @@
 ##########################################################################
-### CODE FOR DOWNLOADING AND WRANGLING SOIL DATA FROM NEON DATA PORTAL
+### CODE FOR DOWNLOADING AND WRANGLING DATA FROM NEON DATA PORTAL
 ### Created Feb 28th, 2018
 ### Updated June 15, 2018
-### Edited for programmatic upload to Google Drive, Jan 7 2019
-### More edits to interact with Google Drive + add other vars, July 2019
+### Edits, programmatic upload to Google Drive, Jan 7 2019
+### Edits, interact with Google Drive + add other vars, July 2019
+### Edits, provide biome and cover type for megapit data, Oct 2019
+### Edits, provide size categories for root data, Jan 2020
 ### S. Weintraub
 ##########################################################################
 
 ### Reset workspace
 rm(list = ls())
 
-### Install packages
-library(tidyverse) # includes googledrive package
-library(devtools) # for interacting with Git packages
-# Install git version of neonUtilities - for downloading products with the API
-devtools::install_github("NEONScience/NEON-utilities/neonUtilities", 
-                         dependencies=T, force = T)
-library(neonUtilities)
-# Install git version of geoNEON - for getting spatial data about sampling sites
-devtools::install_github('NEONScience/NEON-geolocation/geoNEON', 
-                         dependencies=TRUE, force = T)
+### Load packages - CRAN
+library(tidyverse) # joining and wrangling functions
+library(neonUtilities) # to download NEON data
+library(googlesheets) # to interact with good drive,
+#devtools::install_github("tidyverse/googledrive", dependencies = T, force = T) # dev version
+
+### Load packages - Git 
+library(devtools)
+# geoNEON - for getting spatial data about sampling sites. uncomment and run line below if need this package
+# install_github('NEONScience/NEON-geolocation/geoNEON', dependencies=T) 
 library(geoNEON)
-# Install neonNTrans - to work up net rates from raw data
-devtools::install_github("NEONScience/NEON-Nitrogen-Transformations/neonNTrans", 
-                         dependencies=TRUE, force = T)
+# neonNTrans - to work up net rates from raw data. uncomment and run line below if need this package
+#install_github("NEONScience/NEON-Nitrogen-Transformations/neonNTrans", dependencies=T)
 library(neonNTrans) 
-### Add working directory for additional user as needed
-# If you've run this code before, make a new folder with the date to put
-# new data-files into and change path below
-# Code below won't run if old files present in the working dir
+
+### Set directories - add for new users as needed
+# If you've run code before, make a new folder with the date to put data-files into and change path below
+# Code won't run if old files present in the working dir
 if (file.exists('/Users/sweintraub/')){
-  dir <- ("/Users/sweintraub/Box/Conferences_Meetings/2018_LTER-SOM/data/2019_08") 
+  dir <- ("/Users/sweintraub/Box/Conferences_Meetings/2018_LTER-SOM/data/2020_02") 
   setwd(dir)
 }
 
@@ -43,11 +44,12 @@ if (file.exists('/Users/sweintraub/')){
 # Next 2 lines (zipsBy and stackBy) download all data for a DP, then unzip, stack by table, keep 'stacked' outputs (neonUtilities)
 # Last 2 lines (file.list and map) push to google drive in NEON folders (googledrive in tidyverse)
 # Run code chunks below (each takes a few mins), then review on google drive to make sure files appear
+# if drive_upload is not working, manually drop the data downloads into the gdrive folders
 
 ## MEGAPIT, SOIL - 9 tables
 {
 googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/")
-googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/")
+googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files")
 # Soil physical properties (Megapit), DP1.00096.001
   zipsByProduct(dpID="DP1.00096.001", site="all", package="basic", check.size=F) +
     stackByTable(paste0(dir, "/filesToStack00096"), folder=T, saveUnzippedFiles = F)
@@ -62,7 +64,7 @@ googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/
 ## MEGAPIT, ROOT BIOMASS - 3 tables
 {
   googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_megapitRoots/data-files/")
-  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitRoots/data-files/")
+  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitRoots/data-files")
 # DP1.10066
   zipsByProduct(dpID="DP1.10066.001", site="all", package="basic", check.size=F) +
     stackByTable(paste0(dir, "/filesToStack10066"), folder=T, saveUnzippedFiles = F)
@@ -72,7 +74,7 @@ googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/
 ## INITIAL CHAR, SOIL - 5 tables
 {
   googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_initialCharacterizationSoil/data-files/")
-  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_initialCharacterizationSoil/data-files/")
+  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_initialCharacterizationSoil/data-files")
 # Soil chemical properties (Distributed initial characterization), DP1.10008.001
   zipsByProduct(dpID="DP1.10008.001", site="all", package="expanded", check.size=F) +
     stackByTable(paste0(dir, "/filesToStack10008"), folder=T, saveUnzippedFiles = F)
@@ -87,7 +89,7 @@ googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/
 ## PERIODIC, SOIL - 10 tables; this one is large, give it time
 {
   googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_periodicSoil/data-files/")
-  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_periodicSoil/data-files/")
+  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_periodicSoil/data-files")
 # Soil chemical properties (Distributed periodic), DP1.10078.001
   zipsByProduct(dpID="DP1.10078.001", site="all", package="basic", check.size=F) +
     stackByTable(paste0(dir, "/filesToStack10078"), folder=T, saveUnzippedFiles = F)
@@ -112,7 +114,7 @@ googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/
 ## PERIODIC, ROOT BIOMASS + ALL ROOT CHEM - 6 tables
 {
   googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_periodicRoots/data-files/")
-  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_periodicRoots/data-files/")
+  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_periodicRoots/data-files")
 # Root sampling tower plots = DP1.10067
   zipsByProduct(dpID="DP1.10067.001", site="all", package="basic", check.size=F) +
   stackByTable(paste0(dir, "/filesToStack10067"), folder=T, saveUnzippedFiles = F)
@@ -132,7 +134,7 @@ googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_megapitSoil/data-files/
 ### LITERFALL - 7 tables; this one is large (flux data), give it time
 {
   googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/")
-  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/")
+  googledrive::drive_mkdir("~/LTER-SOM/Data_downloads/NEON_litterfall/data-files")
   # Litterfall fluxes = DP1.10033
   zipsByProduct(dpID="DP1.10033.001", site="all", package="basic", check.size=F) +
     stackByTable(paste0(dir, "/filesToStack10033"), folder=T, saveUnzippedFiles = F)
@@ -202,11 +204,11 @@ googledrive::drive_upload(paste(dir, "spatial_bbc.csv", sep = "/"), path = "~/LT
 googledrive::drive_upload(paste(dir, "spatial_ltr.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_litterfall/data-files/", verbose = FALSE)
 }
 
-### Load Climate Data, long-term averages - already stored on Google Drive, NEON_site-climate
+### Load Climate Data, long-term averages - already stored on Google Drive, NEON_site-info-other
 {
 clim <- "1V34g10SSWND6mCFwOS1g9Q48LZR26ooi" # google fileID for climate data - PRISM for CONUS, met stations for AK and HI
 CLIM <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", clim))
-landCov <- "1bw976S4lEKJYKEX7LOFRL-IwPUlmdUd5"
+landCov <- "1bw976S4lEKJYKEX7LOFRL-IwPUlmdUd5" # google fileID for tower megapit land cover
 COV <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", landCov))
 }
 
@@ -477,8 +479,7 @@ rootChemClean <- rootChem %>%
     mean(., na.rm = TRUE)
   } else {
     first(.)
-  })) %>%
-  filter(is.na(poolSampleID))
+  }))
 ## Biomass
 mpr_biomass <- read.csv(paste
                      (dir, "filesToStack10066/stackedFiles/mpr_perrootsample.csv", 
@@ -491,14 +492,18 @@ mpr_depths <- read.csv(paste
 mpr_pits <- read.csv(paste
                        (dir, "filesToStack10066/stackedFiles/mpr_perpitprofile.csv", 
                          sep = "/"), header = T, stringsAsFactors = F)
-mpr_pits <- mpr_pits %>%
+mpr_pitsSum <- mpr_pits %>%
   group_by(pitNamedLocation) %>%
   summarise_all(first) # only need pit meta-data, one occurence per pit
+## Get col names in common
+intersect(colnames(mpr_biomass), colnames(rootChem))
+intersect(colnames(mpr_biomass), colnames(mpr_depths))
+intersect(colnames(mpr_biomass), colnames(mpr_pitsSum))
 ## Join
 mpr_all <- mpr_biomass %>%
   left_join(rootChemClean, by = c("sampleID" = "cnSampleID")) %>%
   left_join(mpr_depths, by = c("depthIncrementID", "pitNamedLocation", "endDate")) %>%
-  left_join(mpr_pits, by = c("pitNamedLocation", "endDate")) %>%
+  left_join(mpr_pitsSum, by = c("pitNamedLocation", "endDate")) %>%
   select("pitNamedLocation", "domainID" = "domainID.y", "siteID" = "siteID.y",
          "decimalLatitude", "decimalLongitude", "coordinateUncertainty",  
          "elevation", "collectDate" = "endDate", "pitID", 
@@ -520,17 +525,24 @@ mpr_pit <- mpr_all %>%
          "topDepth", "bottomDepth", "rootStatus", "sizeCategory") %>%
   group_by(primaryKey) %>%
   summarise_all(first)
-# Re-combine data, pit-level averages
+# Re-combine data, pit-level averages - 1200 records
 mpr_all_clean <- mpr_pit %>%
   left_join(mpr_reps, by = "primaryKey") %>%
   select(-primaryKey) %>%
   arrange(pitID, topDepth)
+# Split size category range into upper and lower columns
+unique(mpr_all_clean$sizeCategory)
+mpr_all_clean2 <- mpr_all_clean %>%
+  mutate(root_lower = ifelse(grepl("<", sizeCategory), 0, 
+                             ifelse(grepl("2", sizeCategory), 2, 4)),
+         root_upper = ifelse(grepl(">", sizeCategory), 10, 
+                             ifelse(grepl("2", sizeCategory), 2, 4)))
 # Add biome (from TIS) and dominant plants (PHEN)
 intersect(colnames(mpr_all_clean), colnames(COV))
-mpr_all_clean <- left_join(x = mpr_all_clean, y = COV, 
+mpr_all_clean3 <- left_join(x = mpr_all_clean2, y = COV, 
                             by = c("siteID")) # warning ok
 # Write the file
-write.csv(mpr_all_clean, paste(dir, 'megapit_roots.csv', sep = "/"), row.names = F)
+write.csv(mpr_all_clean3, paste(dir, 'megapit_roots.csv', sep = "/"), row.names = F)
 googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_megapitRoots/NEON_megapitRoots_all/megapit_roots")
 googledrive::drive_upload(paste(dir, "megapit_roots.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_megapitRoots/NEON_megapitRoots_all/", 
                           type = "spreadsheet", verbose = FALSE)
@@ -539,16 +551,6 @@ googledrive::drive_upload(paste(dir, "megapit_roots.csv", sep = "/"), path = "~/
 ### PERIODIC ROOTS
 {
 # Chem already loaded above, but still need to combine biomass and chem
-# Condense chem table so each sampleID only has 1 row, e.g., take means for reps
-# and put CO2 trapped Y/N on same row, periodic only
-rootChemClean2 <- rootChem %>%
-  group_by(cnSampleID) %>%
-  summarise_all(list( ~ if (is.numeric(.)) {
-    mean(., na.rm = TRUE)
-  } else {
-    first(.)
-  })) %>%
-  filter(!is.na(poolSampleID))
 ## Biomass
 bbc_biomass <- read.csv(paste
                         (dir, "filesToStack10067/stackedFiles/bbc_rootmass.csv", 
@@ -566,8 +568,8 @@ bbc_biomass_sum <- bbc_biomass %>%
   filter(qaDryMass == "N") %>%
   mutate(clipSampleID = substr(sampleID, 1, 19)) %>%
   group_by(clipSampleID, sizeCategory, rootStatus) %>%
-  summarise(rootMass = sum(dryMass), 
-            sampleID = first(sampleID)) %>%
+  dplyr::summarise(rootMass = sum(dryMass), 
+                   sampleID = first(sampleID)) %>%
   mutate(poolSampleID = ifelse(rootStatus == "live", 
                                paste(substr(sampleID, 1, 23), sizeCategory,"POOL", sep = "."),
                                NA)) %>% # add 'poolID' to join to chemistry
@@ -598,8 +600,8 @@ bbc_all <- bbc_core_sum.3 %>%
   mutate(rootSampleTopDepth = 0) %>%
   left_join(bbc_biomass_sum, by = "clipSampleID") %>%
   mutate(rootMassPerArea = rootMass/rootSampleArea) %>%
-  rename(rootSampleBottomDepth = rootSampleDepth) %>%
-  left_join(rootChemClean2, by = c("namedLocation", "domainID", "siteID", 
+  dplyr::rename(rootSampleBottomDepth = rootSampleDepth) %>%
+  left_join(rootChemClean, by = c("namedLocation", "domainID", "siteID", 
                                    "plotID", "poolSampleID")) %>%
   mutate(CNratio = carbonPercent/nitrogenPercent) %>%
   select(c(-collectDate.y, -uid, -cnSampleID, -plotType, 
@@ -607,14 +609,20 @@ bbc_all <- bbc_core_sum.3 %>%
            -percentAccuracyQF, - analyticalRepNumber, -testMethod,
            -analyzedBy, -reviewedBy, -co2Trapped, 
            -remarks, -laboratoryName, -instrument, -dataQF)) %>%
-  rename(collectDate = collectDate.x)
+  dplyr::rename(collectDate = collectDate.x)
+# Split size category range into upper and lower columns
+unique(bbc_all$sizeCategory)
+bbc_all2 <- bbc_all %>%
+  separate(sizeCategory, c("root_lower", "root_upper")) %>%
+  mutate(root_lower = ifelse(root_lower == "05", "0.5", root_lower), 
+         root_upper = ifelse(root_upper == "05", "0.5", root_upper), 
+         rootStatus = ifelse(rootStatus%in%c("live","dead"), rootStatus, "live+dead"))
 # Write the file
-write.csv(bbc_all, paste(dir, 'periodic_roots.csv', sep = "/"), row.names = F)
+write.csv(bbc_all2, paste(dir, 'periodic_roots.csv', sep = "/"), row.names = F)
 googledrive::drive_trash("~/LTER-SOM/Data_downloads/NEON_periodicRoots/NEON_periodicRoots_a-master-database/periodic_roots")
 googledrive::drive_upload(paste(dir, "periodic_roots.csv", sep = "/"), path = "~/LTER-SOM/Data_downloads/NEON_periodicRoots/NEON_periodicRoots_a-master-database/", 
                           type = "spreadsheet", verbose = FALSE)
 }
-
 ### LITTERFALL ###
 {
 ltr_pertrap <- read.csv(paste
@@ -651,8 +659,7 @@ dupes <- ltr_mass_mod %>%
   filter(n > 1) # these massSampleIDs are duplicated, 116 as of Sept 2019
 # Subset to duplicated massSampleIDs
 ltr_mass_dupes <- ltr_mass_mod %>%
-  filter(massSampleID %in% dupes$massSampleID)
-View(ltr_mass_dupes) # Often masses are the same or very close (mistaken qaDryMass most likely)
+  filter(massSampleID %in% dupes$massSampleID) # Often masses are the same or very close (mistaken qaDryMass most likely)
 # Only retain the first instance of each record in duplicate pairs - short term, NEON will ultimately fix
 ltr_mass_mod <- ltr_mass_mod[!duplicated(ltr_mass_mod$massSampleID, fromLast=TRUE),] 
 
@@ -703,14 +710,15 @@ ltr_all <- ltr_mass_mod %>%
 ltr_fieldAndTrap_annual <- ltr_fieldAndTrap %>%
   mutate(year = ifelse(!is.na(eventID), substr(eventID, 5, 8), substr(setDate, 1,4))) %>%
   group_by(trapID, year, trapCondition2) %>%
-  summarize(trappingDaysSum = sum(trappingDays)) 
+  dplyr::summarize(trappingDaysSum = sum(trappingDays)) 
 # Wide format + add flags
 ltr_fieldAndTrap_annual_wide <- ltr_fieldAndTrap_annual %>%
   spread(trapCondition2, trappingDaysSum) %>%
-  rename(trappingDaysOk = Ok, 
+  dplyr::rename(trappingDaysOk = Ok, 
          trappingDaysProb = Problem) %>%
-  rowwise() %>%
-  mutate(trappingDaysTotal = sum(trappingDaysOk, trappingDaysProb, na.rm = T), 
+  mutate(trappingDaysOk = ifelse(is.na(trappingDaysOk), 0, trappingDaysOk), 
+         trappingDaysProb = ifelse(is.na(trappingDaysProb), 0, trappingDaysProb),
+         trappingDaysTotal = trappingDaysOk + trappingDaysProb, 
          trappingDaysTot_pass = ifelse(trappingDaysTotal <= 430 & trappingDaysTotal >=299, "Y", "N"), # total number of days flag
          trappingDays_pctGood = 100 * trappingDaysOk / trappingDaysTotal) # percentage of days good flag
 # Filter to only 'good' traps
@@ -723,22 +731,12 @@ ltrFlux_perTrap_perGroup <- ltr_all %>%
   mutate(year = ifelse(!is.na(eventID), substr(eventID, 5, 8), substr(setDate, 1,4)),
          trap_year = paste0(trapID, '-', year)) %>%
   filter(trap_year %in% ltr_fieldAndTrap_annual_keep$trap_year) %>%
-  rowwise() %>%
   mutate(massPerArea = dryMass / trapSize) %>%
-  ungroup() %>%
   group_by(siteID, plotID, trapID, year, functionalGroup) %>%
-  summarize(gramsDMPerMeterSquared = sum(massPerArea)) %>%
+  dplyr::summarize(gramsDMPerMeterSquared = sum(massPerArea)) %>%
   left_join(select(ltr_fieldAndTrap_annual_keep, trapID, year, trappingDaysOk),
             by = c("trapID", "year")) %>%
   mutate(gramsDMPerMeterSquaredPerYear = round(365 * gramsDMPerMeterSquared / trappingDaysOk, 3))
-
-# ltrFlux_perTrap_perGroup.2 <- ltr_all %>%
-#   mutate(year = ifelse(!is.na(eventID), substr(eventID, 5, 8), substr(setDate, 1,4)),
-#          trap_year = paste0(trapID, '-', year)) %>%
-#   filter(trap_year %in% ltr_fieldAndTrap_annual_keep$trap_year) %>%
-#   group_by(siteID, plotID, trapID, year, functionalGroup) %>%
-#   summarize(dryMass_total = sum(dryMass),
-#             trapArea = first(trapSize))
 
 ## Add Chemistry
 # Need this to add collect year to chemistry samples
@@ -750,12 +748,14 @@ separate_rows(massSampleIDList) %>%
   left_join(select(ltr_field, fieldSampleID, eventID), by = "fieldSampleID") %>%
   mutate(year = ifelse(!is.na(eventID), substr(eventID, 5, 8), substr(setDate, 1,4))) %>%
   group_by(massSampleMixtureID) %>%
-  summarize(year = first(year))
+  dplyr::summarize(year = first(year))
 # CN - Take means for analytical reps & put CO2 trapped yes/no on the same line
 ltr_CN_mod <- ltr_CN %>%
+  mutate(nitrogenPercent = ifelse(cnPercentQF %in% c(1,3), NA, nitrogenPercent), # exclude data flagged by the analysis lab
+         carbonPercent =ifelse(cnPercentQF %in% c(2,3), NA, carbonPercent)) %>%
   group_by(cnSampleID) %>%
   summarise_all(list( ~ if (is.numeric(.)) {
-    mean(., na.rm = TRUE)
+    round(mean(., na.rm = TRUE),3)
   } else {
     first(.)
   })) %>%
@@ -769,9 +769,11 @@ ltr_CN_mod <- ltr_CN_mod %>%
   left_join(ltr_chemsub_mod, by = "massSampleMixtureID")
 # Lignin - Take means for analytical reps
 ltr_lig_mod <- ltr_lig %>%
+  mutate(ligninPercent = ifelse(measurementQF == 1, NA, ligninPercent), # exclude data flagged by the analysis lab
+         cellulosePercent = ifelse(measurementQF ==1, NA, cellulosePercent)) %>%
   group_by(ligninSampleID) %>%
   summarise_all(list( ~ if (is.numeric(.)) {
-    mean(., na.rm = TRUE)
+    round(mean(., na.rm = TRUE),3)
   } else {
     first(.)
   })) %>%
