@@ -11,8 +11,8 @@ if (file.exists('/Users/sweintraub/')){
   dir1 <- ("/Users/sweintraub/Documents/GitHub/lterwg-som/") 
 }
 
-if (file.exists('/Users/JM_1/')){
-  dir1 <- ("/Volumes/MooreHD/GitHub/lterwg-som/") #This isn't working, I think it doesn't like the space in my external HD name
+if (file.exists('/Users/5a7/')){
+  dir1 <- ("/Users/5a7/Documents/GitHub/lterwg-som/") 
 }
 
 if (file.exists('C:/Users/vishr_000')){
