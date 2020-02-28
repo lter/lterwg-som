@@ -21,12 +21,14 @@ if (file.exists('C:/Users/vishr_000')){
 dir1
 
 ### Load data - if downloaded
-som <- readRDS(paste(dir1, "root_group_analyses/somCompositeData_2019-10-15.rds", sep = "/"))
+#som <- readRDS(paste(dir1, "root_group_analyses/somCompositeData_2019-10-15.rds", sep = "/"))
 #landCov <- read.csv(paste(dir1, "root_group_analyses/NEONtowerSiteMetadata.csv", sep = "/"))#because the updated file already has landcover
 
 ### Load data - straight from google drive
 library(googledrive)
 library(tidyverse)
+library(dplyr)
+library(ggplot2)
 source(paste0(dir1,'data-processing/get_latest_som.R'))
 som <- get_latest_som() #HINT: Select 0 and re-authorize the google api each time. Not sure why the pre-auth isn't working.
 
@@ -85,8 +87,7 @@ sum(is.na(somNEONMega$carbon_stock)) # 6 rows have no C
 
 #subset dfs, half of neon sites
 somNEONMega1 <- somNEONMega %>%
-  filter(site_code%in%neonSiteList1) %>%
-  arrange(land_cover)
+  filter(site_code%in%neonSiteList1) 
 somNEONMega2 <- somNEONMega %>%
   filter(!site_code%in%neonSiteList1)
 
@@ -301,10 +302,11 @@ anova(reduced.mod1, reduced.mod2)
 fig1_landcov <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
   geom_smooth(method=lm, color="black")+
   geom_point(aes(fill=land_cover), pch=21, size=3)+
+  scale_fill_manual(values=c("orchid", "springgreen3","coral","dodgerblue"))+
   xlab(bquote(Whole-profile~root~biomass~(kg~C~m^-2)))+
   ylab(bquote(Whole-profile~soil~organic~C~(kg~C~m^-2)))+
-  guides(fill=guide_legend(title="Land Cover", ncol=2, title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
-  theme(legend.position=c(0.8,0.1), legend.box.background = element_rect(color = "black"), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
+  guides(fill=guide_legend(title="Land Cover", ncol=2, title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
+  theme(legend.position=c(0.75,0.1), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text=element_text(size=14))
 fig1_landcov
 ggsave(plot=fig1_landcov, filename="wholeprof_SOC_bgb_landcov.jpeg", dpi=300)
 
@@ -314,8 +316,8 @@ fig1_clay <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stoc
   geom_smooth(method=lm, color="black")+
   xlab(bquote(Whole-profile~root~biomass~(kg~C~m^-2)))+
   ylab(bquote(Whole-profile~soil~organic~C~(kg~C~m^-2)))+
-  guides(size=guide_legend(title="Percent Clay", title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
-  theme(legend.position=c(0.9,0.15), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
+  guides(size=guide_legend(title="Percent Clay", title.theme = element_text(size=14, angle=0), label.theme = element_text(size=12, angle=0)))+
+  theme(legend.position=c(0.9,0.15), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text.x=element_text(size=14),axis.text.y=element_text(size=14))
 fig1_clay
 ggsave(plot=fig1_clay, filename="wholeprof_SOC_bgb_clay.jpeg", dpi=300)
 
@@ -433,15 +435,15 @@ mod<-lmer(data=somNEONMegaSoil.withRoot.Profile.hzn.stats, lyr_soc_stock_calc_su
             bgb_c_stock_sum + hzn_type +(1|layer_bot_max))
 emmeans(mod, pairwise~hzn_type, adjust="tukey")
 
-#Figure 3
+#Figure 2
 fig3_hzn <- ggplot(data=somNEONMegaSoil.withRoot.Profile.hzn.stats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
   geom_point(aes(color = hzn_type))+
   geom_smooth(method=lm, aes(color=hzn_type))+
   scale_color_manual(values=c("orangered3","navyblue"))+
   xlab(bquote(Root~biomass~(kg~C~m^-2)))+
   ylab(bquote(Soil~organic~C~(kg~C~m^-2)))+
-  guides(color=guide_legend(title="Horizon", title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
-  theme(legend.position=c(0.85,0.85), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=12),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
+  guides(color=guide_legend(title="Horizon", title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
+  theme(legend.position=c(0.85,0.85), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text.x=element_text(size=14),axis.text.y=element_text(size=14))
 fig3_hzn
 ggsave(plot=fig3_hzn, filename="hzn_SOC_bgb.jpeg", dpi=300)
 
@@ -492,6 +494,51 @@ library(minqa)
   View(beta.all)
   plot(beta.all$beta_roots,beta.all$beta_soc)
   
+# Calculating betas for M horizons separately
+somNEONMegaSoilRootSelSumDepth_hzn <- somNEONMegaSoilRootSelSumDepth %>%
+  mutate(hzn_type = ifelse(grepl("^O", hzn), "organic", "mineral"))
+somNEONMegaSoilRootSelSumDepth_M <- filter(somNEONMegaSoilRootSelSumDepth_hzn, hzn_type=="mineral")
+  
+# a function to calculate root beta for each site **M horizon**
+min.rss.roots <- function(beta){
+  x = somNEONMegaSoilRootSelSumDepth_M_site$rootfrac_cumsum #I replaced tgc_site with somNEONMegaSoilRootSelSumDepth_site
+  y = 1-beta^somNEONMegaSoilRootSelSumDepth_M_site$layer_bot
+  sum((x-y)^2,na.rm=T)
+}
+
+# a function to calculate soil beta for each site **M horizon**
+min.rss.soc <- function(beta){
+  x = somNEONMegaSoilRootSelSumDepth_M_site$socfrac_cumsum
+  y = 1-beta^somNEONMegaSoilRootSelSumDepth_M_site$layer_bot
+  sum((x-y)^2,na.rm=T)
+}
+
+
+#a loop for calculating betas for each site **O horizon**
+results.list = list()
+for (site in somNEONMegaSoilRootSelSumDepth_M$site_code) {
+  
+  somNEONMegaSoilRootSelSumDepth_M_site <- filter(somNEONMegaSoilRootSelSumDepth_M, site_code == site)
+  beta_site_roots <- bobyqa(0.1,min.rss.roots,0.01,1)$par
+  beta_site_soc <- bobyqa(0.1,min.rss.soc,0.01,1)$par
+  lhs <- somNEONMegaSoilRootSelSumDepth_M_site$rootfrac_cumsum
+  rhs <- 1-beta_site_roots^somNEONMegaSoilRootSelSumDepth_M_site$layer_bot
+  r2_site_roots <- summary(lm(lhs ~ rhs))$r.squared
+  lhs <- somNEONMegaSoilRootSelSumDepth_M_site$socfrac_cumsum
+  rhs <- 1-beta_site_soc^somNEONMegaSoilRootSelSumDepth_M_site$layer_bot
+  r2_site_soc <- summary(lm(lhs ~ rhs))$r.squared
+  results.list[[site]] = tibble(beta_roots = beta_site_roots,
+                                beta_soc = beta_site_soc,
+                                r2_roots = r2_site_roots,
+                                r2_soc = r2_site_soc,
+                                site_code = site)
+}
+
+beta.all.M <- bind_rows(results.list)
+View(beta.all.M)
+plot(beta.all.M$beta_roots,beta.all.M$beta_soc)
+
+
 #Adding covariates and making a csv file to store the beta values 
 somNEONMegaSoilRootCovariates.ldcv <- somNEONMegaSoilRootCovariates %>%
   left_join(select(somNEONMega, land_cover, site_code), by="site_code") %>%
@@ -507,24 +554,43 @@ beta.all<-beta.all %>%
   filter(!site_code%in%c("CLBJ","JORN","GUAN","LAJA","GRSM","TEAK","BARR")) #these sites have betaSOC = 0.1
 write.csv(beta.all, "beta.all_022720.csv")
 beta.all<-read.csv("beta.all_022720.csv") 
+
+beta.all.M<-beta.all.M %>%
+  left_join(somNEONMegaSoilRootCovariates.ldcv, by= "site_code")%>%
+  filter(!site_code%in%c("SOAP", "BONA", "DEJU", "HEAL", "MLBS","ABBY","WREF","CLBJ","JORN","GUAN","LAJA","GRSM","TEAK","BARR")) #these sites have betaSOC = 0.1
+write.csv(beta.all.M, "beta.all.M_022820.csv")
+beta.all<-read.csv("beta.all.M_022820.csv") 
   
-#the beta-by-beta plot
+#Fig 3. the beta-by-beta plot
 beta.landcov<-ggplot(data=beta.all, aes(x=beta_roots, y=beta_soc))+
   geom_abline(slope=1,intercept=0, lty="dashed")+  
   geom_point(aes(fill=land_cover), pch=21, size=3)+ 
+  scale_fill_manual(values=c("orchid", "springgreen3","coral","dodgerblue"))+
   xlab(bquote(beta~Fine~root~biomass))+
   ylab(bquote(beta~SOC~stock))+
-  guides(fill=guide_legend(title="Land cover", title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
+  guides(fill=guide_legend(title="Land cover", title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
   theme_bw()+
-  theme(legend.position=c(0.15,0.15), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
+  theme(legend.position=c(0.15,0.15), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text=element_text(size=14))
 beta.landcov
 ggsave(plot=beta.landcov, file="beta.landcov.jpeg", dpi=300)
 
+beta.landcov.M<-ggplot(data=beta.all.M, aes(x=beta_roots, y=beta_soc))+
+  geom_abline(slope=1,intercept=0, lty="dashed")+  
+  geom_point(aes(fill=land_cover), pch=21, size=3)+ 
+  scale_fill_manual(values=c("orchid", "springgreen3","coral","dodgerblue"))+
+  xlab(bquote(beta~Fine~root~biomass~(mineral~horizons)))+
+  ylab(bquote(beta~SOC~stock~(mineral~horizons)))+
+  guides(fill=guide_legend(title="Land cover", title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
+  theme_bw()+
+  theme(legend.position=c(0.15,0.15), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text=element_text(size=14))
+beta.landcov.M
+ggsave(plot=beta.landcov.M, file="beta.landcov.M.jpeg", dpi=300)
+
 #Site-specific plots with root and soc beta curves
-  lhs <- tgc_site$socfrac_cumsum
-  rhs <- 1-beta_site_soc^tgc_site$layer_bot
-  site_soc <- lm(lhs ~ rhs)
-  pred_soc<-predict(site_soc)
+  #lhs <- tgc_site$socfrac_cumsum
+  #rhs <- 1-beta_site_soc^tgc_site$layer_bot
+  #site_soc <- lm(lhs ~ rhs)
+  #pred_soc<-predict(site_soc)
   
   #lhs <- tgc_site$rootfrac_cumsum
   #rhs <- 1-beta_site_roots^tgc_site$layer_bot
@@ -567,8 +633,23 @@ beta.site2
 df<-as.data.frame(ggplot_build(beta.site2)$data) #to check ggplot's color scheme
 ggsave(plot=beta.site2, file="beta.site2.jpeg",dpi=300)
 
-#Stats for Objective 3: Is root beta correlated to soil beta, and what covariates explain the variation?
-#Using a regular lm here because there are no random effects. Previously, we used layer_bot as a random but that shouldn't affect betas??
+#Stats for Objective 3b: Betas in mineral horizons only
+beta.m.nocult<-filter(beta.all.M, !land_cover=="cultivated")
+null.mod <- lmer(data=beta.m.nocult, beta_soc~(1|layer_bot_max))
+mod <- lmer(data=beta.m.nocult, beta_soc ~ beta_roots*map + (1|layer_bot_max))
+summary(mod)  
+Anova(mod)
+em<-emmeans(mod, pairwise~land_cover, method="Tukey")
+em
+vif(mod)
+anova(null.mod, mod)
+
+mod.reduced <- lmer(data=beta.all, beta_soc ~ beta_roots + land_cover + mat + (1|layer_bot_max))
+
+summary(mod.reduced)  
+Anova(mod.reduced)
+vif(mod.reduced)
+
 beta.all.nocult<-filter(beta.all, !land_cover=="cultivated")
 null.mod <- lmer(data=beta.all.nocult, beta_soc~(1|layer_bot_max))
 mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*clay + (1|layer_bot_max))
@@ -584,3 +665,4 @@ mod.reduced <- lmer(data=beta.all, beta_soc ~ beta_roots + land_cover + mat + (1
 summary(mod.reduced)  
 Anova(mod.reduced)
 vif(mod.reduced)
+
