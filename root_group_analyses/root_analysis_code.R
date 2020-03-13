@@ -365,6 +365,25 @@ Anova(reduced.mod)
 AIC(reduced.mod)
 performance::r2(reduced.mod)
 
+#Mineral horizon models
+null.mod <- lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ (1|layer_bot_max))
+
+full.mod<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
+                 bgb_c_stock_sum + map + mat + clay + land_cover + (1|layer_bot_max))
+summary(full.mod)
+Anova(full.mod)
+anova(full.mod, null.mod)
+AIC(full.mod)
+performance::r2(full.mod)
+vif(full.mod)
+
+reduced.mod<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
+                    bgb_c_stock_sum + mat + clay + land_cover  + (1|layer_bot_max)) 
+summary(reduced.mod)
+Anova(reduced.mod)
+AIC(reduced.mod)
+performance::r2(reduced.mod)
+
 #Figure 2
 fig2_landcov <- ggplot(data=somNEON_organic_wholeprofile, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
   geom_smooth(method=lm, color="black")+
@@ -410,6 +429,8 @@ plot(reduced.mod.org) #plotting residuals from the full mixed model, should have
 qqnorm(residuals(reduced.mod.org))
 
 #mineral horizon model
+
+
 full.mod.min<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
                      bgb_c_stock_sum +  mat + map + clay +  (1|layer_bot_max)) # removed land cover as a fixed effect
 summary(full.mod.min)
@@ -431,6 +452,7 @@ vif(reduced.mod.min)
 plot(reduced.mod.min) #plotting residuals from the full mixed model, should have no relationship
 qqnorm(residuals(reduced.mod.min))
 
+#Are O and M horizons different?
 mod<-lmer(data=somNEONMegaSoil.withRoot.Profile.hzn.stats, lyr_soc_stock_calc_sum ~ 
             bgb_c_stock_sum + hzn_type +(1|layer_bot_max))
 emmeans(mod, pairwise~hzn_type, adjust="tukey")
