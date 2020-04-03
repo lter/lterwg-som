@@ -28,3 +28,9 @@ vignettes/*.pdf
 lterwg-som.Rproj
 # tarball
 *.rds
+# to avoid all the root group results
+*.jpg
+*.pptx
+*.pdf
+*.docx
+*.csv
