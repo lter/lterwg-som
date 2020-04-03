@@ -29,7 +29,7 @@ print(unique(data.all$year_all))
 ### Clean up SOC percent values
 #filter out negative soc%
 data.soc.percent<-data.all %>% 
-  filter(!is.na(lyr_soc)) %>% filter(lyr_soc>0) %>% filter(lyr_soc<100)
+  filter(!is.na(lyr_soc)) #%>% filter(lyr_soc>0) %>% filter(lyr_soc<100)
 
 soc.per<-ggplot(data.soc.percent %>% filter(network!="none"), 
                 aes(x=site_code, y=as.numeric(year)), na.omit=T)+
@@ -42,6 +42,7 @@ soc.per<-ggplot(data.soc.percent %>% filter(network!="none"),
   facet_grid(.~network, scales = "free_x", space='free_x', drop=FALSE)
 
 soc.per
+# Not using %SOC here, should we be consistent?
 
 soc.dep<-ggplot(data.all %>% filter(network!="none"), 
                 aes(x=site_code, y=layer_bot), na.omit=T)+
