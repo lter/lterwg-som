@@ -2,6 +2,7 @@
 title: "LTERWG SOM time series"
 authors: "Derek Pierson & Jessica Moore"
 date: "November 14, 2018"
+Modified: "Will Wieder, April 3, 2020"
 output:
   rmarkdown::html_document:
     theme: lumen
@@ -11,10 +12,12 @@ output:
 ```{r warning = FALSE, message = FALSE}
 library(dplyr)
 library(ggplot2)
+library(tidyverse)
+
 
 #??? Could we bring in data from a remote source (= common address)
-data.all <- read.csv("C:/Google Drive/Code/R/SOM_tarball_11-9-2018.csv", stringsAsFactors = FALSE)
-#data.all <- readRDS("/Users/JM 1/Downloads/somCompositeData_2018-11-09T17_34_23.rds") 
+#data.all <- read.csv("C:/Google Drive/Code/R/SOM_tarball_11-9-2018.csv", stringsAsFactors = FALSE)
+data.all <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-02-11.rds")  
 
 data.all$full_name <- paste0(data.all$site_code," ",data.all$location_name)  #Concatenate strings
 data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove NA from strings
@@ -23,15 +26,17 @@ data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove 
 ## Fix and combine YEAR data from columns 'observation_date' and 'observation_date-1'
 ```{r warning = FALSE}
 #get first four characters from observation_date
+#first, make sure all are characters 
+data.all$observation_date <- str_replace(data.all$observation_date, "Aug-Sep 2011", "2011")
 data.all$year<-substr(data.all$observation_date, start=1, stop=4)
-data.all$year<-as.numeric(data.all$year)
+data.all$year_all<-as.numeric(data.all$year)
 
 #get first four characters from observation_date_1
-data.all$year_1<-substr(data.all$observation_date_1, start=1, stop=4)
-data.all$year_1<-as.numeric(data.all$year_1)
+#data.all$year_1<-substr(data.all$observation_date_1, start=1, stop=4)
+#data.all$year_1<-as.numeric(data.all$year_1)
 
 #merge year and year_1 using ifelse
-data.all$year_all<-ifelse(data.all$year=="NA",data.all$year_1,data.all$year)
+#data.all$year_all<-ifelse(data.all$year=="NA",data.all$year_1,data.all$year)
 
 ```
 
@@ -84,12 +89,13 @@ ggplot(data.all, aes(x=year_all))+
 ### Clean up soc data values
 ```{r warning = FALSE}
 #turn negative soc stocks into NA, new dataframe called data.soc
-data.soc<- data.all %>% filter(!is.na(soc_stock)) %>% filter(soc_stock>0)
+data.soc<- data.all %>% 
+  filter(!is.na(lyr_soc_stock)) %>% filter(lyr_soc_stock>0)
 ```
 
 ### SOC stock data exploration
 ```{r warning = FALSE}
-ggplot(data.soc, aes(x=year_all, y=soc_stock))+
+ggplot(data.soc, aes(x=year_all, y=lyr_soc_stock))+
   geom_point(aes(color=site_code, shape=network))+
   scale_y_continuous(limits=c(0,30000))+
   labs(x="Observation Year", y="SOC stock")
@@ -100,12 +106,13 @@ ggplot(data.soc, aes(x=year_all, y=soc_stock))+
 ### Clean up SOC percent values
 ```{r warning = FALSE}
 #filter out negative soc%
-data.soc.percent<-data.all %>% filter(!is.na(soc)) %>% filter(soc>0) %>% filter(soc<1)
+data.soc.percent<-data.all %>% 
+  filter(!is.na(lyr_soc)) %>% filter(lyr_soc>0) %>% filter(lyr_soc<1)
 ```
 
 ### SOC percent data exploration
 ```{r warning = FALSE}
-soc.prop<-ggplot(data.soc.percent, aes(x=year_all, y=soc))+
+soc.prop<-ggplot(data.soc.percent, aes(x=year_all, y=lyr_soc))+
   geom_point(aes(color=site_code, shape=network))+
   #scale_y_continuous(limits=c(0,30000))+
   labs(x="Observation Year", y="SOC proportion")
@@ -113,16 +120,26 @@ soc.prop
 ```
 
 ```{r warning = FALSE}
-soc.per<-ggplot(data.soc.percent, aes(x=year_all, y=soc))+
+soc.per<-ggplot(data.soc.percent, aes(x=year_all, y=lyr_soc))+
   geom_point(aes(color=site_code, shape=network))+
   #scale_y_continuous(limits=c(0,30000))+
   labs(x="Observation Year", y="SOC %")
 ```
 
 ```{r warning = FALSE}
-soc.per<-ggplot(data.soc.percent, aes(x=year, y=soc))+
+soc.per<-ggplot(data.soc.percent, aes(x=year, y=lyr_soc))+
   geom_point(aes(color=site_code))+
   facet_grid(.~network)
+soc.per
+```
+
+```{r warning = FALSE}
+soc.per<-ggplot(data.soc.percent %>% filter(network!="none"), 
+                aes(x=site_code, y=year))+
+  geom_point(aes(color=network)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  facet_grid(.~network, scales = "free_x")
+
 soc.per
 ```
 
@@ -134,7 +151,7 @@ soc.per
 data.soc.percent.umbs.c<-data.soc.percent %>% filter(site_code=="UMBS") %>% filter(tx_L1=="C")
 
 #Plot SOC by YEAR
-soc.per<-ggplot(data.soc.percent.umbs.c, aes(x=year_all, y=soc))+
+soc.per<-ggplot(data.soc.percent.umbs.c, aes(x=year_all, y=lyr_soc))+
   geom_point()+
   #scale_y_continuous(limits=c(0,30000))+t
   labs(x="Observation Year", y="SOC in Control Plots")
