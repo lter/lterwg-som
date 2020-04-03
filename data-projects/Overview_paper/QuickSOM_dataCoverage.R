@@ -17,6 +17,7 @@ data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove 
 
 #get first four characters from observation_date
 #first, make sure all are characters 
+data.all$site_code <- str_replace(data.all$site_code, "HRF", "HFR")
 data.all$observation_date <- str_replace(data.all$observation_date, "Aug-Sep 2011", "2011")
 data.all$year<-substr(data.all$observation_date, start=1, stop=4)
 data.all$year_all<-as.numeric(data.all$year)
@@ -31,27 +32,31 @@ print(unique(data.all$year_all))
 data.soc.percent<-data.all %>% 
   filter(!is.na(lyr_soc)) #%>% filter(lyr_soc>0) %>% filter(lyr_soc<100)
 
-soc.per<-ggplot(data.soc.percent %>% filter(network!="none"), 
+soc.per<-ggplot(data.all %>% 
+                  filter(network!="none")  %>%
+                  filter(layer_bot>0), 
                 aes(x=site_code, y=as.numeric(year)), na.omit=T)+
   geom_point(aes(color=network), show.legend = FALSE) +
   #  geom_point() +
   xlab("Site") + ylab("Year") +
   scale_y_continuous(breaks=seq(1975,2019,5),na.value=2020)+
-  scale_x_discrete(labels = abbreviate) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=8)) +
+  scale_x_discrete()+#labels = abbreviate) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=6)) +
   facet_grid(.~network, scales = "free_x", space='free_x', drop=FALSE)
 
 soc.per
 # Not using %SOC here, should we be consistent?
 
-soc.dep<-ggplot(data.all %>% filter(network!="none"), 
+soc.dep<-ggplot(data.all %>% 
+                  filter(network!="none")  %>%
+                  filter(layer_bot>0), 
                 aes(x=site_code, y=layer_bot), na.omit=T)+
   geom_point(aes(color=network), show.legend = FALSE, size=1) +
   #  geom_point() +
   xlab("Site") + ylab("Depth") +
   scale_y_reverse() +
-  scale_x_discrete(labels = abbreviate) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=8)) +
+  scale_x_discrete() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=6)) +
   facet_grid(.~network, scales = "free_x", space='free_x', drop=FALSE) 
 
 soc.dep
@@ -66,4 +71,6 @@ dev.next()
 soc.dep
 dev.off()
 
+temp = data.all %>% filter(network ==  "NEON") 
+print(unique(temp$site_code ))
 
