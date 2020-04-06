@@ -21,9 +21,20 @@ data.all$site_code <- str_replace(data.all$site_code, "HRF", "HFR")
 data.all$observation_date <- str_replace(data.all$observation_date, "Aug-Sep 2011", "2011")
 data.all$year<-substr(data.all$observation_date, start=1, stop=4)
 data.all$year_all<-as.numeric(data.all$year)
-
 #check for unique 4 digit values in year
 print(unique(data.all$year_all))
+
+# --- print some basic database characteristics ---
+print(dim(data.all))
+# total database
+print(dim(data.all)[1]*dim(data.all)[2])
+# not missing observations
+print(sum(!is.na(data.all)))
+# % possible observations
+print(100* sum(!is.na(data.all)) / (dim(data.all)[1]*dim(data.all)[2]) )
+
+data.true = print(unique(data.all$location_name))
+print(unique(data.all$site_code))
 
 #-------------------------------------------
 ## SOC Percents

@@ -30,6 +30,9 @@ lterwg-som.Rproj
 *.rds
 # to avoid all the root group results
 *.jpg
+*.jpeg
+*.png
+*.afdesign
 *.pptx
 *.pdf
 *.docx
