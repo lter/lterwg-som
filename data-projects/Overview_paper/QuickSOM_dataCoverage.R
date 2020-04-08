@@ -33,8 +33,32 @@ print(sum(!is.na(data.all)))
 # % possible observations
 print(100* sum(!is.na(data.all)) / (dim(data.all)[1]*dim(data.all)[2]) )
 
-data.true = print(unique(data.all$location_name))
+print(unique(data.all$location_name))
 print(unique(data.all$site_code))
+data.exp = data.all %>% filter(experiments == 'YES') %>%
+  filter(network == 'CZO')
+print(unique(data.exp$site_code))
+
+# subset for each unique location to get basic climate data
+data.loc = data.all %>% distinct(location_name, .keep_all = T)
+sum_stats = function(din) {
+  print(summary(din))
+  print(paste('SD = ',sd(din, na.rm=T)))
+}
+sum_stats(data.loc$mat)
+sum_stats(data.loc$map)
+sum_stats(data.loc$anpp)
+
+print(unique(data.loc$land_cover))
+print(sum(!is.na(data.loc$land_cover)))
+
+print(unique(data.loc$eco_region))
+print(sum(!is.na(data.loc$eco_region)))
+print(sum(!is.na(data.loc$eco_type)))
+
+# What is the best way to aggregate data across sites?
+sum_stats(data.loc$ph_h2o)
+
 
 #-------------------------------------------
 ## SOC Percents
