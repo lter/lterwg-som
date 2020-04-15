@@ -9,6 +9,7 @@ print(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
+library(ggpubr)
 
 data.all <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-02-11.rds")  
 
@@ -18,6 +19,10 @@ data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove 
 #get first four characters from observation_date
 #first, make sure all are characters 
 data.all$site_code <- str_replace(data.all$site_code, "HRF", "HFR")
+data.all$site_code <- str_replace(data.all$site_code, "Eel", "ER-CZO")
+data.all$site_code <- str_replace(data.all$site_code, "SSHCZO", "SSH-CZO")
+data.all$site_code <- str_replace(data.all$site_code, "SSCZO", "SS-CZO")
+data.all$site_code <- str_replace(data.all$site_code, "BcCZO", "BC-CZO")
 data.all$observation_date <- str_replace(data.all$observation_date, "Aug-Sep 2011", "2011")
 data.all$year<-substr(data.all$observation_date, start=1, stop=4)
 data.all$year_all<-as.numeric(data.all$year)
@@ -35,9 +40,37 @@ print(100* sum(!is.na(data.all)) / (dim(data.all)[1]*dim(data.all)[2]) )
 
 print(unique(data.all$location_name))
 print(unique(data.all$site_code))
-data.exp = data.all %>% filter(experiments == 'YES') %>%
-  filter(network == 'CZO')
-print(unique(data.exp$site_code))
+L1 = unique(data.all$tx_L1_level, na.rm=T)
+L2 = unique(data.all$tx_L2_level)
+L3 = unique(data.all$tx_L3_level)
+print(L1)
+print(L2)
+print(L3)
+
+# Derek, should someting like this be in shiny?
+for (i in 1:length(L1)) {
+  Mtype = L1[i]
+  print(Mtype)
+  data.exp = data.all %>% filter(experiments == 'YES') %>%
+      filter(tx_L1_level == Mtype | 
+               tx_L2_level == Mtype | 
+               tx_L3_level == Mtype | 
+               tx_L4_level == Mtype)
+  print(unique(data.exp$site_code))
+  remove(data.exp)
+  print("---")
+}
+
+data.grad = data.all %>% filter(gradient == 'YES') %>%
+  filter(network == 'NEON') 
+print(unique(data.grad$site_code))
+
+data.time = data.all %>% filter(time_series == 'YES') %>%
+  filter(network == 'NEON') 
+print(unique(data.time$site_code))
+
+
+print(unique(data.all$tx_L1_level))
 
 # subset for each unique location to get basic climate data
 data.loc = data.all %>% distinct(location_name, .keep_all = T)
@@ -67,45 +100,41 @@ sum_stats(data.loc$ph_h2o)
 data.soc.percent<-data.all %>% 
   filter(!is.na(lyr_soc)) #%>% filter(lyr_soc>0) %>% filter(lyr_soc<100)
 
-soc.per<-ggplot(data.all %>% 
-                  filter(network!="none")  %>%
-                  filter(layer_bot>0), 
-                aes(x=site_code, y=as.numeric(year)), na.omit=T)+
+data.plot = data.all %>% 
+  filter(network!="none")  %>% 
+  filter(layer_bot>0)
+
+timePlot <-ggplot(data.plot, 
+                aes(x=site_code, y=as.numeric(year)), na.omit=F)+
   geom_point(aes(color=network), show.legend = FALSE) +
-  #  geom_point() +
   xlab("Site") + ylab("Year") +
   scale_y_continuous(breaks=seq(1975,2019,5),na.value=2020)+
   scale_x_discrete()+#labels = abbreviate) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=6)) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank() ) +
+        #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=6)) +
   facet_grid(.~network, scales = "free_x", space='free_x', drop=FALSE)
 
-soc.per
-# Not using %SOC here, should we be consistent?
+timePlot
 
-soc.dep<-ggplot(data.all %>% 
-                  filter(network!="none")  %>%
-                  filter(layer_bot>0), 
-                aes(x=site_code, y=layer_bot), na.omit=T)+
+# Not using %SOC here, should we be consistent?
+depthPlot<-ggplot(data.plot, 
+                aes(x=site_code, y=layer_bot), na.omit=F)+
   geom_point(aes(color=network), show.legend = FALSE, size=1) +
-  #  geom_point() +
   xlab("Site") + ylab("Depth") +
   scale_y_reverse() +
   scale_x_discrete() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=6)) +
-  facet_grid(.~network, scales = "free_x", space='free_x', drop=FALSE) 
+  facet_grid(.~network, scales = "free_x", space='free_x', drop=FALSE) +
+  # to srtip off network names / boxes
+  theme(strip.background = element_blank(),strip.text.x = element_blank()  )
 
-soc.dep
+depthPlot
 
-pdf(file = "fig4.pdf",   # The directory you want to save the file in
-    width = 15, # The width of the plot in inches
-    height = 3) # The height of the plot in inches
+#from ggpubr package
+combined_site <- ggarrange(timePlot, depthPlot, ncol = 1, nrow = 2)
+combined_site
 
-soc.per
-dev.next()
-
-soc.dep
-dev.off()
-
-temp = data.all %>% filter(network ==  "NEON") 
-print(unique(temp$site_code ))
+ggsave(plot=combined_site, filename = "fig4.jpg", width = 15, height = 6 , dpi = 300)
+ggsave(plot=combined_site, filename = "fig4.pdf", width = 15, height = 6 , dpi = 300)
 
