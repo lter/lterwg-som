@@ -11,8 +11,6 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 #get tarball for different users
 
-
-
 if (file.exists('C:/github/lterwg-som')){
   #for Derek
   tarball <- readRDS("C:/GitHub/lterwg-som-shiny/shiny_SOM/somCompositeData_2020-02-11.rds")  
@@ -74,11 +72,11 @@ mapWorld <- borders("world", colour="gray40", fill="white")
 mapWorld <- ggplot() + mapWorld + 
   geom_point(data = simplmap.df, aes(x=long, y = lat, color=network), 
              size=3, alpha=0.5, show.legend = FALSE) + #position=position_jitter(h=0.7,w=0.7)) + 
-  ylim(-53,80) +
+  ylim(-54,85) +
   coord_fixed(1.3) +
   map_style
 
-  #mapWorld
+  mapWorld
 
 #USA map
 mapUSA <- borders("usa", colour="gray40", fill="white") 
@@ -109,7 +107,7 @@ mapUSA <- ggplot()  + mapUSA +
 combined_maps <- ggarrange(mapWorld, mapUSA, ncol = 1, nrow = 2)
 combined_maps
 
-ggsave(plot=combined_maps, filename = "fig3.jpeg", width = 8, height = 6 , dpi = 300)
+ggsave(plot=combined_maps, filename = "fig3.jpg", width = 8, height = 6 , dpi = 300)
 
 
 
