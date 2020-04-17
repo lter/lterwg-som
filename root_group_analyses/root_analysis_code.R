@@ -256,6 +256,8 @@ ggplot(somNEONMega1,
 library(lmerTest) # provides sig test for lmer models
 library(sjstats) #for psuedo-R2 in lmer models
 library(car) #for Anova
+library(MASS) #for stepAIC 
+
 
 #Objective 1a: whole profile sum SOC ~ whole profile root SOC; layer_bot as random effect
 # This is for O+M horizons.
@@ -274,6 +276,10 @@ somNEONMegaSoilRootCovariates <- somNEONMegaSoil.withRoot %>% # somNEONMegaSoilR
 # Join covariates 
 somNEONMegaSoilRoot_wholeprofilestats <- somNEONMegaSoil.withRoot.Profile %>% 
   left_join(somNEONMegaSoilRootCovariates, by="site_code")
+
+#remove shrublands
+somNEONMegaSoilRoot_wholeprofilestats_noshrub <- somNEONMegaSoilRoot_wholeprofilestats %>% 
+  filter(land_cover!="shrubland")
 
 #### AVNI'S AGU TALK
 ### Results for Objective 1: Whole profile summed SOC correlated with Roots (whole profile summed) and other covariates
@@ -301,6 +307,16 @@ plot(reduced.mod) #plotting residuals from the full mixed model, should have no 
 qqnorm(residuals(reduced.mod)) #checking normality of residuals, should be close to linear
 
 anova(reduced.mod1, reduced.mod2)
+
+#Obj 1b: using a multiple regression instead of mixed model to directly test layer_bot_max effect
+mod<-lm(data=somNEONMegaSoilRoot_wholeprofilestats_noshrub, lyr_soc_stock_calc_sum ~ bgb_c_stock_sum +
+          mat + clay + land_cover + layer_bot_max)
+summary(mod)
+Anova(mod)
+#calculating partial correlation coefficients, Greene, W.H. (2005). Econometric Analysis. 5th ed. Pearson Education.
+t.values <- mod$coeff / sqrt(diag(vcov(mod)))
+partcorr <- sqrt((t.values^2) / ((t.values^2) + mod$df.residual))
+partcorr
 
 #Figure 1
 fig1_landcov <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
