@@ -236,6 +236,8 @@ somNEONMega1 <-  somNEONMegaSoilRootSelSumDepth %>%
   filter(site_code%in%neonSiteList1) %>%
   arrange(land_cover)
 
+mod_root<-lm(data=somNEONMegaSoilRootSelSumDepth, rootfrac_cumsum~layer_bot)
+
 somNEONMega2 <- somNEONMegaSoilRootSelSumDepth %>%
   filter(!site_code%in%neonSiteList1)
 ggplot(somNEONMega1, 
@@ -243,9 +245,11 @@ ggplot(somNEONMega1,
            y = layer_bot )) +
   geom_point(pch = 21, color="black") + 
   geom_point(aes(x=rootfrac_cumsum), color="blue")+
+  geom_spline(aes(x=rootfrac_cumsum), color="blue")+ #formula = y ~ splines::bs(x, 2)
+  geom_smooth(method=lm,color="black")+
   scale_y_reverse() + # puts 0 at the top
   #scale_x_log10() +
-  facet_wrap(~ site_code, scales = "free") +
+  facet_wrap(~ land_cover, scales = "free") +
   theme_bw() # save 6 x 12
 
 #Jessica's stats section
@@ -581,7 +585,7 @@ beta.all.M<-beta.all.M %>%
   left_join(somNEONMegaSoilRootCovariates.ldcv, by= "site_code")%>%
   filter(!site_code%in%c("SOAP", "BONA", "DEJU", "HEAL", "MLBS","ABBY","WREF","CLBJ","JORN","GUAN","LAJA","GRSM","TEAK","BARR")) #these sites have betaSOC = 0.1
 write.csv(beta.all.M, "beta.all.M_022820.csv")
-beta.all<-read.csv("beta.all.M_022820.csv") 
+beta.all.M<-read.csv("beta.all.M_022820.csv") 
   
 #Fig 3. the beta-by-beta plot
 beta.landcov<-ggplot(data=beta.all, aes(x=beta_roots, y=beta_soc))+
@@ -652,6 +656,25 @@ beta.site2<-ggplot(somNEONMega2,
   theme_bw()+
   theme(legend.position=c(0.8,0.07), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
 beta.site2
+df<-as.data.frame(ggplot_build(beta.site2)$data) #to check ggplot's color scheme
+ggsave(plot=beta.site2, file="beta.site2.jpeg",dpi=300)
+
+beta.summ<-ggplot(beta.all, 
+                  aes(x = socfrac_cumsum, 
+                      y = layer_bot )) +
+  geom_point(pch = 21, aes(color=land_cover)) + 
+  geom_point(aes(x=rootfrac_cumsum, color=land_cover), pch=19)+
+  geom_smooth(aes(x=rootfrac_cumsum, color=land_cover), lty="solid")+
+  geom_smooth(aes(x=socfrac_cumsum, color=land_cover), lty="dashed")+
+  scale_color_manual(values=c("darkorange3", "darkgreen","royalblue2","darkorchid"))+
+  scale_y_reverse() + # puts 0 at the top
+  xlab("Proportion accumulated")+
+  ylab("Soil depth (cm)")+
+  guides(color=guide_legend(title="Land cover", ncol=2,title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
+  facet_wrap(~ land_cover) +
+  theme_bw()+
+  theme(legend.position="right", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
+beta.summ
 df<-as.data.frame(ggplot_build(beta.site2)$data) #to check ggplot's color scheme
 ggsave(plot=beta.site2, file="beta.site2.jpeg",dpi=300)
 
