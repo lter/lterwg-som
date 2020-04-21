@@ -675,24 +675,32 @@ beta.site2
 df<-as.data.frame(ggplot_build(beta.site2)$data) #to check ggplot's color scheme
 ggsave(plot=beta.site2, file="beta.site2.jpeg",dpi=300)
 
-beta.summ<-ggplot(beta.all, 
+
+somNEONMegaSoilRootSelSumDepth_noshcult<-somNEONMegaSoilRootSelSumDepth %>% filter(land_cover %in% c("forest","rangeland/grassland"))
+segments<-data.frame(x=c(0.1,0.1,0,0,0),xend=c(0.2,0.2,0,0,0),y=c(275,300,0,0,0),yend=c(275,300,0,0,0),land_cover=factor("forest",levels=c("forest","rangeland/grassland")))
+beta.summ<-ggplot(somNEONMegaSoilRootSelSumDepth_noshcult, 
                   aes(x = socfrac_cumsum, 
                       y = layer_bot )) +
-  geom_point(pch = 21, aes(color=land_cover)) + 
-  geom_point(aes(x=rootfrac_cumsum, color=land_cover), pch=19)+
-  geom_smooth(aes(x=rootfrac_cumsum, color=land_cover), lty="solid")+
-  geom_smooth(aes(x=socfrac_cumsum, color=land_cover), lty="dashed")+
-  scale_color_manual(values=c("darkorange3", "darkgreen","royalblue2","darkorchid"))+
+  geom_point(aes(color=land_cover), pch = 21, alpha=0.2) + 
+  geom_point(aes(x=rootfrac_cumsum, color=land_cover), pch=19, alpha=0.2)+
+  geom_smooth(aes(x=rootfrac_cumsum, color=land_cover), lty="solid", span=1.5)+
+  geom_smooth(aes(x=socfrac_cumsum, color=land_cover), lty="dashed", span=1.5)+
+  scale_color_manual(values=c("darkgreen","royalblue2"))+
   scale_y_reverse() + # puts 0 at the top
   xlab("Proportion accumulated")+
   ylab("Soil depth (cm)")+
-  guides(color=guide_legend(title="Land cover", ncol=2,title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
+  annotate("segment",lty="solid", x=0.1,xend=0.2,y=275,yend=275)+
+  annotate("segment",lty="dashed", x=0.1,xend=0.2,y=300,yend=300)+
+  annotate("text", label="SOC", x=0.25,y=300,hjust=0)+
+  annotate("text",label="Roots", x=0.25, y=275,hjust=0)+
+  annotate("point", x=0.03,y=300, pch=21)+
+  annotate("point", x=0.03,y=275, pch=19)+
+  guides(color=guide_legend(title="Land cover", ncol=1,title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
   facet_wrap(~ land_cover) +
   theme_bw()+
-  theme(legend.position="right", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
+  theme(legend.position="none", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
 beta.summ
-df<-as.data.frame(ggplot_build(beta.site2)$data) #to check ggplot's color scheme
-ggsave(plot=beta.site2, file="beta.site2.jpeg",dpi=300)
+ggsave(plot=beta.summ, file="beta_landcov_summary.jpeg",dpi=300)
 
 #Stats for Objective 3b: Betas in mineral horizons only
 beta.m.nocult<-filter(beta.all.M, !land_cover=="cultivated")
@@ -711,9 +719,9 @@ summary(mod.reduced)
 Anova(mod.reduced)
 vif(mod.reduced)
 
-beta.all.nocult<-filter(beta.all, !land_cover=="cultivated")
+beta.all.nocult<-filter(beta.all, !land_cover %in% c("cultivated","shrubland"))
 null.mod <- lmer(data=beta.all.nocult, beta_soc~(1|layer_bot_max))
-mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*clay + (1|layer_bot_max))
+mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*land_cover + (1|layer_bot_max))
 summary(mod)  
 Anova(mod)
 em<-emmeans(mod, pairwise~land_cover, method="Tukey")
