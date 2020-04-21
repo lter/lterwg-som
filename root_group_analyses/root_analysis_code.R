@@ -211,7 +211,7 @@ ggplot(somNEONMegaSoil.withRoot.Profile, aes(x = lyr_soc_stock_calc,
 
 #cum sum for root C stocks, contains cumulative fractions for soc & bgb and also whole profile sums
 somNEONMegaRootsSelSumDepth <- somNEONMegaRootsSel %>% 
-  left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, bgb_c_stock_sum),by="site_code") %>%
+  left_join(dplyr::select(somNEONMegaSoil.withRoot.Profile, site_code, bgb_c_stock_sum),by="site_code") %>%
   mutate(rootfrac = round((bgb_c_stock/bgb_c_stock_sum),2)) %>%
   group_by(site_code) %>%
   mutate(rootfrac_cumsum = round(cumsum(rootfrac),2))
@@ -219,7 +219,7 @@ View(somNEONMegaRootsSelSumDepth)
 
 #cum sum for SOC stocks
 somNEONMegaSoilSelSumDepth <- somNEONMegaSoilSel %>% 
-  left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, lyr_soc_stock_calc_sum),by="site_code") %>%
+  left_join(dplyr::select(somNEONMegaSoil.withRoot.Profile, site_code, lyr_soc_stock_calc_sum),by="site_code") %>%
   mutate(socfrac = round((lyr_soc_stock_calc/lyr_soc_stock_calc_sum),2)) %>%
   group_by(site_code) %>%
   filter(!is.na(socfrac)) %>%
@@ -602,6 +602,21 @@ beta.all.M<-beta.all.M %>%
   filter(!site_code%in%c("SOAP", "BONA", "DEJU", "HEAL", "MLBS","ABBY","WREF","CLBJ","JORN","GUAN","LAJA","GRSM","TEAK","BARR")) #these sites have betaSOC = 0.1
 write.csv(beta.all.M, "beta.all.M_022820.csv")
 beta.all.M<-read.csv("beta.all.M_022820.csv") 
+
+#quick summary stats
+beta.stats<-beta.all %>% filter(land_cover %in% c("forest","rangeland/grassland")) %>%
+  group_by(land_cover) %>%
+  summarize(mean.soc = mean(beta_soc, na.rm=T),
+            stdev.soc = sd(beta_soc,na.rm=T),
+            mean.roots = mean(beta_roots,na.rm=T),
+            stdev.roots = sd(beta_roots,na.rm=T)) %>%
+  mutate(mean.soc = round(mean.soc, 3),
+         stdev.soc = round(stdev.soc,3),
+         mean.roots = round(mean.roots,3),
+         stdev.roots = round(stdev.roots,3))
+beta.stats$x<-c(0.45,0.45)
+beta.stats$y.roots<-c(175,175)
+beta.stats$y.soc<-c(200,200)
   
 #Fig 3. the beta-by-beta plot
 beta.landcov<-ggplot(data=beta.all, aes(x=beta_roots, y=beta_soc))+
@@ -677,30 +692,33 @@ ggsave(plot=beta.site2, file="beta.site2.jpeg",dpi=300)
 
 
 somNEONMegaSoilRootSelSumDepth_noshcult<-somNEONMegaSoilRootSelSumDepth %>% filter(land_cover %in% c("forest","rangeland/grassland"))
-segments<-data.frame(x=c(0.1,0.1,0,0,0),xend=c(0.2,0.2,0,0,0),y=c(275,300,0,0,0),yend=c(275,300,0,0,0),land_cover=factor("forest",levels=c("forest","rangeland/grassland")))
+segments<-data.frame(x=c(0.1,0.1,0,0,0),xend=c(0.2,0.2,0,0,0),y=c(175,200,0,0,0),yend=c(175,200,0,0,0),land_cover=factor("forest",levels=c("forest","rangeland/grassland")))
 beta.summ<-ggplot(somNEONMegaSoilRootSelSumDepth_noshcult, 
                   aes(x = socfrac_cumsum, 
                       y = layer_bot )) +
-  geom_point(aes(color=land_cover), pch = 21, alpha=0.2) + 
-  geom_point(aes(x=rootfrac_cumsum, color=land_cover), pch=19, alpha=0.2)+
+  #geom_point(color="black", pch = 21, size=1) + 
+  #geom_point(aes(x=rootfrac_cumsum),color="black", pch=19, size=1)+
+  geom_smooth(aes(x=socfrac_cumsum, group=site_code), color="gray",lty="dashed", span=1.5)+
   geom_smooth(aes(x=rootfrac_cumsum, color=land_cover), lty="solid", span=1.5)+
   geom_smooth(aes(x=socfrac_cumsum, color=land_cover), lty="dashed", span=1.5)+
   scale_color_manual(values=c("darkgreen","royalblue2"))+
-  scale_y_reverse() + # puts 0 at the top
+  scale_y_reverse(limits=c(200,0)) + # puts 0 at the top
   xlab("Proportion accumulated")+
   ylab("Soil depth (cm)")+
-  annotate("segment",lty="solid", x=0.1,xend=0.2,y=275,yend=275)+
-  annotate("segment",lty="dashed", x=0.1,xend=0.2,y=300,yend=300)+
-  annotate("text", label="SOC", x=0.25,y=300,hjust=0)+
-  annotate("text",label="Roots", x=0.25, y=275,hjust=0)+
-  annotate("point", x=0.03,y=300, pch=21)+
-  annotate("point", x=0.03,y=275, pch=19)+
+  annotate("segment",lty="solid", x=0.1,xend=0.2,y=175,yend=175)+
+  annotate("segment",lty="dashed", x=0.1,xend=0.2,y=200,yend=200)+
+  annotate("text", label="SOC", x=0.25,y=200,hjust=0)+
+  annotate("text",label="Roots", x=0.25, y=175,hjust=0)+
+  annotate("point", x=0.03,y=200, pch=21)+
+  annotate("point", x=0.03,y=175, pch=19)+
+  geom_text(data=beta.stats, aes(x=x,y=y.soc,label=mean.soc), hjust=0)+
+  geom_text(data=beta.stats, aes(x=x,y=y.roots,label=mean.roots), hjust=0)+
   guides(color=guide_legend(title="Land cover", ncol=1,title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
   facet_wrap(~ land_cover) +
   theme_bw()+
-  theme(legend.position="none", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
+  theme(legend.position="none", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12),strip.text = element_text(size=16))
 beta.summ
-ggsave(plot=beta.summ, file="beta_landcov_summary.jpeg",dpi=300)
+ggsave(plot=beta.summ, file="beta_landcov_summary_v3.jpeg",dpi=300)
 
 #Stats for Objective 3b: Betas in mineral horizons only
 beta.m.nocult<-filter(beta.all.M, !land_cover=="cultivated")
