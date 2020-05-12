@@ -270,12 +270,32 @@ somNEONMegaSoilRootCovariates <- somNEONMegaSoil.withRoot %>% # somNEONMegaSoilR
   summarize(mat = mean(mat, na.rm = T), 
             map = mean(map, na.rm = T), 
             clay = mean(clay, na.rm=T),
-            layer_bot_max = max(layer_bot, na.rm=T))
-            eco_region = )) # FIX THIS! I want eco type or region or biome in here
+            layer_bot_max = max(layer_bot, na.rm=T),
+            veg_note_profile = first(veg_note_profile))
+            #eco_region = )) # FIX THIS! I want eco type or region or biome in here
 
 # Join covariates 
 somNEONMegaSoilRoot_wholeprofilestats <- somNEONMegaSoil.withRoot.Profile %>% 
-  left_join(somNEONMegaSoilRootCovariates, by="site_code")
+  left_join(somNEONMegaSoilRootCovariates, by="site_code") %>%
+  filter(!is.na(veg_note_profile))
+
+#Add mycorrhizal type from Myco Database, cite Chaudhary, V., Rúa, M., Antoninka, A. et al. MycoDB, a global database of plant response to mycorrhizal fungi. Sci Data 3, 160028 (2016). https://doi.org/10.1038/sdata.2016.28, Chaudhary, V. Bala et al. (2017), Data from: MycoDB, a global database of plant response to mycorrhizal fungi, v4, Dryad, Dataset, https://doi.org/10.5061/dryad.723m1
+mycodb<-read.csv("MycoDB_version4.csv")
+mycodb_sum<- mycodb %>% filter(!is.na(MYCORRHIZAETYPE)) %>%
+  filter(!is.na(PlantSpecies2018)) %>%
+  group_by(PlantSpecies2018) %>%
+  summarize(myc = first(MYCORRHIZAETYPE))
+#re-formatting to match
+somNEONMegaSoilRoot_wholeprofilestats_myc<-separate(somNEONMegaSoilRoot_wholeprofilestats, col="veg_note_profile", remove=F, sep=", ", into=c("veg1","veg2","veg3"), extra="warn", fill="warn")
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg1<-gsub(" ", "_", somNEONMegaSoilRoot_wholeprofilestats_myc$veg1) #placing underscores between genus and species names
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg2<-gsub(" ", "_", somNEONMegaSoilRoot_wholeprofilestats_myc$veg2)
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg3<-gsub(" ", "_", somNEONMegaSoilRoot_wholeprofilestats_myc$veg3)
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg1<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg1)
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg2<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg2)
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg3<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg3)
+
+somNEONMegaSoilRoot_wholeprofilestats_mycjoin<-somNEONMegaSoilRoot_wholeprofilestats_myc %>%
+  left_join(dplyr::select(mycodb, PlantSpecies2018, MYCORRHIZAETYPE), by=c("veg1"="PlantSpecies2018"))
 
 #remove shrublands
 somNEONMegaSoilRoot_wholeprofilestats_noshrub <- somNEONMegaSoilRoot_wholeprofilestats %>% 
@@ -283,6 +303,8 @@ somNEONMegaSoilRoot_wholeprofilestats_noshrub <- somNEONMegaSoilRoot_wholeprofil
 #remove the three high root outliers
 somNEONMegaSoilRoot_wholeprofilestats_NoOut <-somNEONMegaSoilRoot_wholeprofilestats %>% 
   filter(!site_code %in% c("HEAL","BARR","WREF")) 
+
+
 
 
 #### AVNI'S AGU TALK
