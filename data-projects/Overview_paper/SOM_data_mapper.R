@@ -1,6 +1,9 @@
-#Script to map SOM tarball data
-#Derek Pierson, piersond@oregonstate.edu
-#Created: 8/28/2019
+# Script to map SOM tarball data
+# Derek Pierson, piersond@oregonstate.edu
+# Created: 8/28/2019
+# Modified and updated 
+#   Will Wieder, wwieder@ucar.edu
+#   5/1/2020
 
 rm(list=ls())
 library(dplyr)
@@ -13,11 +16,11 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 if (file.exists('C:/github/lterwg-som')){
   #for Derek
-  tarball <- readRDS("C:/GitHub/lterwg-som-shiny/shiny_SOM/somCompositeData_2020-02-11.rds")  
+  tarball <- readRDS("C:/GitHub/lterwg-som-shiny/shiny_SOM/somCompositeData_2020-05-12.rds")  
   tarball <- tarball %>% filter(google_dir != "NA")
 } else {
   #for Will
-  tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-02-11.rds")  
+  tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-05-12.rds")  
   tarball <- tarball %>% filter(google_dir != "NA")
 }
 
@@ -107,7 +110,7 @@ mapUSA <- ggplot()  + mapUSA +
 combined_maps <- ggarrange(mapWorld, mapUSA, ncol = 1, nrow = 2)
 combined_maps
 
-ggsave(plot=combined_maps, filename = "fig3.jpg", width = 8, height = 6 , dpi = 300)
+ggsave(plot=combined_maps, filename = "fig4.jpg", width = 8, height = 6 , dpi = 300)
 
 
 

@@ -1,7 +1,8 @@
 # QuickSOM_dataCoverage"
-# Wil Wieder
+# Wil Wieder < wwieder@ucar.edu >
 # Built on work from Derek Pierson & Jessica Moore
-# April 3, 2020
+# April 3, 2020, May 12, 2020
+
 
 rm(list=ls())
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -11,14 +12,15 @@ library(ggplot2)
 library(tidyverse)
 library(ggpubr)
 
-data.all <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-02-11.rds")  
+data.all <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-05-12.rds")  
 
 data.all$full_name <- paste0(data.all$site_code," ",data.all$location_name)  #Concatenate strings
 data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove NA from strings
 
 #get first four characters from observation_date
 #first, make sure all are characters 
-data.all$site_code <- str_replace(data.all$site_code, "HRF", "HFR")
+unique(data.all$site_code)
+unique(data.all$observation_date)
 data.all$site_code <- str_replace(data.all$site_code, "Eel", "ER-CZO")
 data.all$site_code <- str_replace(data.all$site_code, "SSHCZO", "SSH-CZO")
 data.all$site_code <- str_replace(data.all$site_code, "SSCZO", "SS-CZO")
@@ -26,8 +28,11 @@ data.all$site_code <- str_replace(data.all$site_code, "BcCZO", "BC-CZO")
 data.all$observation_date <- str_replace(data.all$observation_date, "Aug-Sep 2011", "2011")
 data.all$year<-substr(data.all$observation_date, start=1, stop=4)
 data.all$year_all<-as.numeric(data.all$year)
+
 #check for unique 4 digit values in year
 print(unique(data.all$year_all))
+print(list(unique(data.all$curator_PersonName)))
+print(list(unique(data.all$author_PersonName)))
 
 # --- print some basic database characteristics ---
 print(dim(data.all))
@@ -47,26 +52,35 @@ print(L1)
 print(L2)
 print(L3)
 
-# Derek, should someting like this be in shiny?
+# experimental treatments in database
 for (i in 1:length(L1)) {
   Mtype = L1[i]
   print(Mtype)
   data.exp = data.all %>% filter(experiments == 'YES') %>%
+      #filter(network == 'NutNet') %>%
       filter(tx_L1_level == Mtype | 
                tx_L2_level == Mtype | 
                tx_L3_level == Mtype | 
                tx_L4_level == Mtype)
+  print(length(unique(data.exp$site_code)))
   print(unique(data.exp$site_code))
   remove(data.exp)
-  print("---")
+  print("------------")
 }
 
-data.grad = data.all %>% filter(gradient == 'YES') %>%
-  filter(network == 'NEON') 
+data.other = data.all %>% filter(experiments == 'YES') %>%
+  filter(network == 'LTER') #%>%
+#  filter(tx_L2_level== 'other (add notes)')
+print(unique(data.other$site_code))
+
+
+data.grad = data.all %>% filter(gradient == 'YES')  %>%
+  filter(network == 'CZO') 
 print(unique(data.grad$site_code))
 
-data.time = data.all %>% filter(time_series == 'YES') %>%
-  filter(network == 'NEON') 
+
+data.time = data.all %>% filter(time_series == 'YES') #%>%
+#   filter(network == 'NutNet') 
 print(unique(data.time$site_code))
 
 
@@ -78,6 +92,7 @@ sum_stats = function(din) {
   print(summary(din))
   print(paste('SD = ',sd(din, na.rm=T)))
 }
+dim(data.loc)
 sum_stats(data.loc$mat)
 sum_stats(data.loc$map)
 sum_stats(data.loc$anpp)
@@ -135,6 +150,6 @@ depthPlot
 combined_site <- ggarrange(timePlot, depthPlot, ncol = 1, nrow = 2)
 combined_site
 
-ggsave(plot=combined_site, filename = "fig4.jpg", width = 15, height = 6 , dpi = 300)
-ggsave(plot=combined_site, filename = "fig4.pdf", width = 15, height = 6 , dpi = 300)
+ggsave(plot=combined_site, filename = "fig5.jpg", width = 15, height = 6 , dpi = 300)
+ggsave(plot=combined_site, filename = "fig5.pdf", width = 15, height = 6 , dpi = 300)
 
