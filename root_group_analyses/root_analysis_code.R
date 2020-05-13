@@ -285,7 +285,8 @@ mycodb_sum<- mycodb %>% filter(!is.na(MYCORRHIZAETYPE)) %>%
   filter(!is.na(PlantSpecies2018)) %>%
   group_by(PlantSpecies2018) %>%
   summarize(myc = first(MYCORRHIZAETYPE))
-#re-formatting to match
+
+#re-formatting our df to match the mycodb_sum df
 somNEONMegaSoilRoot_wholeprofilestats_myc<-separate(somNEONMegaSoilRoot_wholeprofilestats, col="veg_note_profile", remove=F, sep=", ", into=c("veg1","veg2","veg3"), extra="warn", fill="warn")
 somNEONMegaSoilRoot_wholeprofilestats_myc$veg1<-gsub(" ", "_", somNEONMegaSoilRoot_wholeprofilestats_myc$veg1) #placing underscores between genus and species names
 somNEONMegaSoilRoot_wholeprofilestats_myc$veg2<-gsub(" ", "_", somNEONMegaSoilRoot_wholeprofilestats_myc$veg2)
@@ -293,9 +294,12 @@ somNEONMegaSoilRoot_wholeprofilestats_myc$veg3<-gsub(" ", "_", somNEONMegaSoilRo
 somNEONMegaSoilRoot_wholeprofilestats_myc$veg1<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg1)
 somNEONMegaSoilRoot_wholeprofilestats_myc$veg2<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg2)
 somNEONMegaSoilRoot_wholeprofilestats_myc$veg3<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg3)
+write.csv(somNEONMegaSoilRoot_wholeprofilestats_myc, "somNEONMegaSoilRoot_wholeprofilestats_myc.csv")
 
 somNEONMegaSoilRoot_wholeprofilestats_mycjoin<-somNEONMegaSoilRoot_wholeprofilestats_myc %>%
-  left_join(dplyr::select(mycodb, PlantSpecies2018, MYCORRHIZAETYPE), by=c("veg1"="PlantSpecies2018"))
+  left_join(dplyr::select(mycodb_sum, PlantSpecies2018, myc), by=c("veg1"="PlantSpecies2018"))
+write.csv(somNEONMegaSoilRoot_wholeprofilestats_mycjoin, "somNEONMegaSoilRoot_wholeprofilestats_mycjoin.csv")
+somNEONMegaSoilRoot_wholeprofilestats_mycjoin<-read.csv("somNEONMegaSoilRoot_wholeprofilestats_mycjoin.csv")
 
 #remove shrublands
 somNEONMegaSoilRoot_wholeprofilestats_noshrub <- somNEONMegaSoilRoot_wholeprofilestats %>% 
@@ -311,10 +315,11 @@ somNEONMegaSoilRoot_wholeprofilestats_NoOut <-somNEONMegaSoilRoot_wholeprofilest
 ### Results for Objective 1: Whole profile summed SOC correlated with Roots (whole profile summed) and other covariates
 null.mod <- lmer(data=somNEONMegaSoilRoot_wholeprofilestats_NoOut, lyr_soc_stock_calc_sum ~ (1|layer_bot_max))
 
-full.mod<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
-                 bgb_c_stock_sum + mat  + clay + land_cover + (1|layer_bot_max)) #too many eco_regions to analyze
+full.mod<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats_NoOut, lyr_soc_stock_calc_sum ~ 
+                 bgb_c_stock_sum + mat  + clay + land_cover + myc + (1|layer_bot_max)) #too many eco_regions to analyze
 summary(full.mod)
 Anova(full.mod)
+anova(full.mod, null.mod)
 AIC(full.mod)
 performance::r2(full.mod)
 vif(full.mod)
@@ -323,7 +328,7 @@ qqnorm(residuals(full.mod)) #checking normality of residuals, should be close to
 
 #Reduced model, dropping MAP because it is not significant, making land_cover a random effect
 reduced.mod2<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats_NoOut, lyr_soc_stock_calc_sum ~ 
-                     bgb_c_stock_sum + mat + clay + land_cover + (1|layer_bot_max)) 
+                     mat  + (1|layer_bot_max)) 
 summary(reduced.mod2)
 Anova(reduced.mod2)
 anova(null.mod, reduced.mod2)
@@ -426,7 +431,7 @@ AIC(full.mod)
 performance::r2(full.mod)
 vif(full.mod)
 
-#Figure 2
+#Figure 2 NOT USED ANYMORE 5-13-20
 fig2_landcov <- ggplot(data=somNEON_organic_wholeprofile, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
   geom_smooth(method=lm, color="black")+
   geom_point(aes(fill=land_cover), pch=21, size=3)+
@@ -437,7 +442,7 @@ fig2_landcov <- ggplot(data=somNEON_organic_wholeprofile, aes(x=bgb_c_stock_sum/
 fig2_landcov
 ggsave(plot=fig2_landcov, filename="orgprof_SOC_bgb_landcov.jpeg", dpi=300)
 
-#Alternate Figure 2
+#Alternate Figure 2 NOT USED ANYMORE 5-13-20
 fig2_clay <- ggplot(data=somNEON_organic_wholeprofile, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
   geom_point(aes(size=clay), pch=19)+
   geom_smooth(method=lm, color="black")+
