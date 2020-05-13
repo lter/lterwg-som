@@ -211,7 +211,7 @@ ggplot(somNEONMegaSoil.withRoot.Profile, aes(x = lyr_soc_stock_calc,
 
 #cum sum for root C stocks, contains cumulative fractions for soc & bgb and also whole profile sums
 somNEONMegaRootsSelSumDepth <- somNEONMegaRootsSel %>% 
-  left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, bgb_c_stock_sum),by="site_code") %>%
+  left_join(dplyr::select(somNEONMegaSoil.withRoot.Profile, site_code, bgb_c_stock_sum),by="site_code") %>%
   mutate(rootfrac = round((bgb_c_stock/bgb_c_stock_sum),2)) %>%
   group_by(site_code) %>%
   mutate(rootfrac_cumsum = round(cumsum(rootfrac),2))
@@ -219,7 +219,7 @@ View(somNEONMegaRootsSelSumDepth)
 
 #cum sum for SOC stocks
 somNEONMegaSoilSelSumDepth <- somNEONMegaSoilSel %>% 
-  left_join(select(somNEONMegaSoil.withRoot.Profile, site_code, lyr_soc_stock_calc_sum),by="site_code") %>%
+  left_join(dplyr::select(somNEONMegaSoil.withRoot.Profile, site_code, lyr_soc_stock_calc_sum),by="site_code") %>%
   mutate(socfrac = round((lyr_soc_stock_calc/lyr_soc_stock_calc_sum),2)) %>%
   group_by(site_code) %>%
   filter(!is.na(socfrac)) %>%
@@ -236,6 +236,8 @@ somNEONMega1 <-  somNEONMegaSoilRootSelSumDepth %>%
   filter(site_code%in%neonSiteList1) %>%
   arrange(land_cover)
 
+mod_root<-lm(data=somNEONMegaSoilRootSelSumDepth, rootfrac_cumsum~layer_bot)
+
 somNEONMega2 <- somNEONMegaSoilRootSelSumDepth %>%
   filter(!site_code%in%neonSiteList1)
 ggplot(somNEONMega1, 
@@ -243,15 +245,19 @@ ggplot(somNEONMega1,
            y = layer_bot )) +
   geom_point(pch = 21, color="black") + 
   geom_point(aes(x=rootfrac_cumsum), color="blue")+
+  geom_spline(aes(x=rootfrac_cumsum), color="blue")+ #formula = y ~ splines::bs(x, 2)
+  geom_smooth(method=lm,color="black")+
   scale_y_reverse() + # puts 0 at the top
   #scale_x_log10() +
-  facet_wrap(~ site_code, scales = "free") +
+  facet_wrap(~ land_cover, scales = "free") +
   theme_bw() # save 6 x 12
 
 #Jessica's stats section
 library(lmerTest) # provides sig test for lmer models
 library(sjstats) #for psuedo-R2 in lmer models
 library(car) #for Anova
+library(MASS) #for stepAIC 
+
 
 #Objective 1a: whole profile sum SOC ~ whole profile root SOC; layer_bot as random effect
 # This is for O+M horizons.
@@ -264,16 +270,46 @@ somNEONMegaSoilRootCovariates <- somNEONMegaSoil.withRoot %>% # somNEONMegaSoilR
   summarize(mat = mean(mat, na.rm = T), 
             map = mean(map, na.rm = T), 
             clay = mean(clay, na.rm=T),
-            layer_bot_max = max(layer_bot, na.rm=T))
-            #sand = mean(sand, na.rm=T))
+            layer_bot_max = max(layer_bot, na.rm=T),
+            veg_note_profile = first(veg_note_profile))
+            #eco_region = )) # FIX THIS! I want eco type or region or biome in here
 
 # Join covariates 
 somNEONMegaSoilRoot_wholeprofilestats <- somNEONMegaSoil.withRoot.Profile %>% 
-  left_join(somNEONMegaSoilRootCovariates, by="site_code")
+  left_join(somNEONMegaSoilRootCovariates, by="site_code") %>%
+  filter(!is.na(veg_note_profile))
+
+#Add mycorrhizal type from Myco Database, cite Chaudhary, V., Rúa, M., Antoninka, A. et al. MycoDB, a global database of plant response to mycorrhizal fungi. Sci Data 3, 160028 (2016). https://doi.org/10.1038/sdata.2016.28, Chaudhary, V. Bala et al. (2017), Data from: MycoDB, a global database of plant response to mycorrhizal fungi, v4, Dryad, Dataset, https://doi.org/10.5061/dryad.723m1
+mycodb<-read.csv("MycoDB_version4.csv")
+mycodb_sum<- mycodb %>% filter(!is.na(MYCORRHIZAETYPE)) %>%
+  filter(!is.na(PlantSpecies2018)) %>%
+  group_by(PlantSpecies2018) %>%
+  summarize(myc = first(MYCORRHIZAETYPE))
+#re-formatting to match
+somNEONMegaSoilRoot_wholeprofilestats_myc<-separate(somNEONMegaSoilRoot_wholeprofilestats, col="veg_note_profile", remove=F, sep=", ", into=c("veg1","veg2","veg3"), extra="warn", fill="warn")
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg1<-gsub(" ", "_", somNEONMegaSoilRoot_wholeprofilestats_myc$veg1) #placing underscores between genus and species names
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg2<-gsub(" ", "_", somNEONMegaSoilRoot_wholeprofilestats_myc$veg2)
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg3<-gsub(" ", "_", somNEONMegaSoilRoot_wholeprofilestats_myc$veg3)
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg1<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg1)
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg2<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg2)
+somNEONMegaSoilRoot_wholeprofilestats_myc$veg3<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg3)
+
+somNEONMegaSoilRoot_wholeprofilestats_mycjoin<-somNEONMegaSoilRoot_wholeprofilestats_myc %>%
+  left_join(dplyr::select(mycodb, PlantSpecies2018, MYCORRHIZAETYPE), by=c("veg1"="PlantSpecies2018"))
+
+#remove shrublands
+somNEONMegaSoilRoot_wholeprofilestats_noshrub <- somNEONMegaSoilRoot_wholeprofilestats %>% 
+  filter(land_cover!="shrubland")
+#remove the three high root outliers
+somNEONMegaSoilRoot_wholeprofilestats_NoOut <-somNEONMegaSoilRoot_wholeprofilestats %>% 
+  filter(!site_code %in% c("HEAL","BARR","WREF")) 
+
+
+
 
 #### AVNI'S AGU TALK
 ### Results for Objective 1: Whole profile summed SOC correlated with Roots (whole profile summed) and other covariates
-null.mod <- lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ (1|layer_bot_max))
+null.mod <- lmer(data=somNEONMegaSoilRoot_wholeprofilestats_NoOut, lyr_soc_stock_calc_sum ~ (1|layer_bot_max))
 
 full.mod<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
                  bgb_c_stock_sum + mat  + clay + land_cover + (1|layer_bot_max)) #too many eco_regions to analyze
@@ -286,29 +322,42 @@ plot(full.mod) #plotting residuals from the full mixed model, should have no rel
 qqnorm(residuals(full.mod)) #checking normality of residuals, should be close to linear
 
 #Reduced model, dropping MAP because it is not significant, making land_cover a random effect
-reduced.mod2<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats, lyr_soc_stock_calc_sum ~ 
-                   mat + clay + land_cover  + (1|layer_bot_max)) # removed land cover as a fixed effect
-summary(reduced.mod)
-Anova(reduced.mod)
+reduced.mod2<-lmer(data=somNEONMegaSoilRoot_wholeprofilestats_NoOut, lyr_soc_stock_calc_sum ~ 
+                     bgb_c_stock_sum + mat + clay + land_cover + (1|layer_bot_max)) 
+summary(reduced.mod2)
+Anova(reduced.mod2)
+anova(null.mod, reduced.mod2)
 AIC(reduced.mod)
-performance::r2(reduced.mod)
+performance::r2(reduced.mod2)
+
+##Can we get a partial correlation coefficient in the mixed model?
 vif(reduced.mod)
 plot(reduced.mod) #plotting residuals from the full mixed model, should have no relationship
 qqnorm(residuals(reduced.mod)) #checking normality of residuals, should be close to linear
 
-anova(reduced.mod1, reduced.mod2)
+anova(null.mod, reduced.mod2)
+
+#Obj 1b: using a multiple regression instead of mixed model to directly test layer_bot_max effect
+mod<-lm(data=somNEONMegaSoilRoot_wholeprofilestats_NoOut, lyr_soc_stock_calc_sum ~ bgb_c_stock_sum)
+summary(mod)
+Anova(mod)
+#calculating partial correlation coefficients, Greene, W.H. (2005). Econometric Analysis. 5th ed. Pearson Education.
+t.values <- mod$coeff / sqrt(diag(vcov(mod)))
+partcorr <- sqrt((t.values^2) / ((t.values^2) + mod$df.residual))
+partcorr
 
 #Figure 1
-fig1_landcov <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
+write.csv(somNEONMegaSoilRoot_wholeprofilestats, "somNEONMegaSoilRoot_wholeprofilestats.csv")
+fig1_ecoreg <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
   geom_smooth(method=lm, color="black")+
-  geom_point(aes(fill=land_cover), pch=21, size=3)+
-  scale_fill_manual(values=c("orchid", "springgreen3","coral","dodgerblue"))+
+  geom_point(pch=21, size=3, aes(fill = eco_region))+ # alternatively, add aes(fill=land_cover)
+  scale_fill_manual(values=c("darkgreen","tan4","springgreen1","sienna3","tan","dodgerblue","gray"))+
   xlab(bquote(Whole-profile~root~biomass~(kg~C~m^-2)))+
   ylab(bquote(Whole-profile~soil~organic~C~(kg~C~m^-2)))+
-  guides(fill=guide_legend(title="Land Cover", ncol=2, title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
-  theme(legend.position=c(0.75,0.1), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text=element_text(size=14))
-fig1_landcov
-ggsave(plot=fig1_landcov, filename="wholeprof_SOC_bgb_landcov.jpeg", dpi=300)
+  guides(fill=guide_legend(title="Land Cover", ncol=1, title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
+  theme(legend.position="right", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text=element_text(size=14))
+fig1_ecoreg
+ggsave(plot=fig1_ecoreg, filename="Fig1_wholeprof_ecoregion.jpeg", dpi=300)
 
 #Alternate Figure 1
 fig1_clay <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
@@ -331,7 +380,7 @@ somNEONMegaSoil.withRoot.Profile.hzn <- somNEONMegaSoil.withRoot %>%
             lyr_soc_stock_calc_sum = sum(lyr_soc_stock_calc, na.rm = T),
             land_cover = first(land_cover)) 
 
-#Grab covariates, NOTE: we want to add land cover, dominant veg, and maybe mycorrhizal type
+#Grab covariates
 somNEONMegaSoilRootCovariates.hzn <- somNEONMegaSoil.withRoot %>% 
   group_by(site_code, hzn_type) %>%
   summarize(mat = mean(mat, na.rm = T), 
@@ -351,38 +400,31 @@ somNEON_mineral_wholeprofile <- filter(somNEONMegaSoil.withRoot.Profile.hzn.stat
 null.mod <- lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ (1|layer_bot_max))
 
 full.mod<-lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ 
-                 bgb_c_stock_sum + mat + map + clay + land_cover + (1|layer_bot_max))
-summary(full.mod)
-Anova(full.mod)
-AIC(full.mod)
-performance::r2(full.mod)
-vif(full.mod)
+                 bgb_c_stock_sum + land_cover + mat + map +(1|layer_bot_max)) #map has been omitted because the model kept failing to converge
+reduced.mod<-lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ bgb_c_stock_sum + mat + land_cover +
+                    (1|layer_bot_max))
 
-reduced.mod<-lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ 
-                    bgb_c_stock_sum + map  + (1|layer_bot_max)) # removed land cover as a fixed effect
 summary(reduced.mod)
-Anova(reduced.mod)
+anova(reduced.mod, null.mod)
 AIC(reduced.mod)
+performance::performance_aicc(full.mod)
 performance::r2(reduced.mod)
+car::vif(full.mod)
 
 #Mineral horizon models
 null.mod <- lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ (1|layer_bot_max))
 
 full.mod<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
                  bgb_c_stock_sum + map + mat + clay + land_cover + (1|layer_bot_max))
+
+reduced.mod<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
+                    bgb_c_stock_sum + mat + clay + land_cover  + (1|layer_bot_max)) 
 summary(full.mod)
 Anova(full.mod)
 anova(full.mod, null.mod)
 AIC(full.mod)
 performance::r2(full.mod)
 vif(full.mod)
-
-reduced.mod<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
-                    bgb_c_stock_sum + mat + clay + land_cover  + (1|layer_bot_max)) 
-summary(reduced.mod)
-Anova(reduced.mod)
-AIC(reduced.mod)
-performance::r2(reduced.mod)
 
 #Figure 2
 fig2_landcov <- ggplot(data=somNEON_organic_wholeprofile, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
@@ -406,52 +448,6 @@ fig2_clay <- ggplot(data=somNEON_organic_wholeprofile, aes(x=bgb_c_stock_sum/100
 fig2_clay
 ggsave(plot=fig2_clay, filename="orgprof_SOC_bgb_clay.jpeg", dpi=300)
 
-#organic horizon model selection
-full.mod.org<-lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ 
-                 bgb_c_stock_sum +  mat + map + clay + (1|layer_bot_max)) # removed land cover as a fixed effect
-summary(full.mod.org)
-AIC(full.mod.org)
-Anova(full.mod.org)
-r2(full.mod.org)
-vif(full.mod.org)
-plot(full.mod.org) #plotting residuals from the full mixed model, should have no relationship
-qqnorm(residuals(full.mod.org))
-
-#dropped non-sig effects, library(lmerTest)
-reduced.mod.org<-lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ 
-                     bgb_c_stock_sum +  (1|layer_bot_max)) # removed land cover as a fixed effect
-summary(reduced.mod.org)
-AIC(reduced.mod.org)
-Anova(reduced.mod.org) #library(car)
-r2(reduced.mod.org) #library(sjstats); report the marginal r2 (for fixed-effects)
-vif(reduced.mod.org)
-plot(reduced.mod.org) #plotting residuals from the full mixed model, should have no relationship
-qqnorm(residuals(reduced.mod.org))
-
-#mineral horizon model
-
-
-full.mod.min<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
-                     bgb_c_stock_sum +  mat + map + clay +  (1|layer_bot_max)) # removed land cover as a fixed effect
-summary(full.mod.min)
-Anova(full.mod.min)
-AIC(full.mod.min)
-r2(full.mod.min)
-vif(full.mod.min)
-plot(full.mod.min) #plotting residuals from the full mixed model, should have no relationship
-qqnorm(residuals(full.mod.min))
-
-#reduced mineral model, dropped non-sig effects
-reduced.mod.min<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
-                     bgb_c_stock_sum +  mat +  clay +  (1|layer_bot_max)) # removed land cover as a fixed effect
-summary(reduced.mod.min)
-Anova(reduced.mod.min)
-AIC(reduced.mod.min)
-r2(reduced.mod.min)
-vif(reduced.mod.min)
-plot(reduced.mod.min) #plotting residuals from the full mixed model, should have no relationship
-qqnorm(residuals(reduced.mod.min))
-
 #Are O and M horizons different?
 mod<-lmer(data=somNEONMegaSoil.withRoot.Profile.hzn.stats, lyr_soc_stock_calc_sum ~ 
             bgb_c_stock_sum + hzn_type +(1|layer_bot_max))
@@ -459,15 +455,16 @@ emmeans(mod, pairwise~hzn_type, adjust="tukey")
 
 #Figure 2
 fig3_hzn <- ggplot(data=somNEONMegaSoil.withRoot.Profile.hzn.stats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
-  geom_point(aes(color = hzn_type))+
-  geom_smooth(method=lm, aes(color=hzn_type))+
-  scale_color_manual(values=c("orangered3","navyblue"))+
+  geom_smooth(method=lm, aes(color=hzn_type), alpha=0.3)+
+  geom_point(aes(fill = hzn_type), pch=21, size=4)+
+  scale_fill_manual(values=c("black","gray"))+
+  scale_color_manual(values=c("black","gray"), guide="none")+
   xlab(bquote(Root~biomass~(kg~C~m^-2)))+
   ylab(bquote(Soil~organic~C~(kg~C~m^-2)))+
-  guides(color=guide_legend(title="Horizon", title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
+  guides(fill=guide_legend(title="Horizon", title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
   theme(legend.position=c(0.85,0.85), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text.x=element_text(size=14),axis.text.y=element_text(size=14))
 fig3_hzn
-ggsave(plot=fig3_hzn, filename="hzn_SOC_bgb.jpeg", dpi=300)
+ggsave(plot=fig3_hzn, filename="Fig2_hzn_SOC_bgb.jpeg", dpi=300)
 
 ### Objective 3: beta curves for roots and SOC
 ####### Cum sum for betas
@@ -581,7 +578,22 @@ beta.all.M<-beta.all.M %>%
   left_join(somNEONMegaSoilRootCovariates.ldcv, by= "site_code")%>%
   filter(!site_code%in%c("SOAP", "BONA", "DEJU", "HEAL", "MLBS","ABBY","WREF","CLBJ","JORN","GUAN","LAJA","GRSM","TEAK","BARR")) #these sites have betaSOC = 0.1
 write.csv(beta.all.M, "beta.all.M_022820.csv")
-beta.all<-read.csv("beta.all.M_022820.csv") 
+beta.all.M<-read.csv("beta.all.M_022820.csv") 
+
+#quick summary stats
+beta.stats<-beta.all %>% filter(land_cover %in% c("forest","rangeland/grassland")) %>%
+  group_by(land_cover) %>%
+  summarize(mean.soc = mean(beta_soc, na.rm=T),
+            stdev.soc = sd(beta_soc,na.rm=T),
+            mean.roots = mean(beta_roots,na.rm=T),
+            stdev.roots = sd(beta_roots,na.rm=T)) %>%
+  mutate(mean.soc = round(mean.soc, 3),
+         stdev.soc = round(stdev.soc,3),
+         mean.roots = round(mean.roots,3),
+         stdev.roots = round(stdev.roots,3))
+beta.stats$x<-c(0.45,0.45)
+beta.stats$y.roots<-c(175,175)
+beta.stats$y.soc<-c(200,200)
   
 #Fig 3. the beta-by-beta plot
 beta.landcov<-ggplot(data=beta.all, aes(x=beta_roots, y=beta_soc))+
@@ -655,6 +667,36 @@ beta.site2
 df<-as.data.frame(ggplot_build(beta.site2)$data) #to check ggplot's color scheme
 ggsave(plot=beta.site2, file="beta.site2.jpeg",dpi=300)
 
+
+somNEONMegaSoilRootSelSumDepth_noshcult<-somNEONMegaSoilRootSelSumDepth %>% filter(land_cover %in% c("forest","rangeland/grassland"))
+segments<-data.frame(x=c(0.1,0.1,0,0,0),xend=c(0.2,0.2,0,0,0),y=c(175,200,0,0,0),yend=c(175,200,0,0,0),land_cover=factor("forest",levels=c("forest","rangeland/grassland")))
+beta.summ<-ggplot(somNEONMegaSoilRootSelSumDepth_noshcult, 
+                  aes(x = socfrac_cumsum, 
+                      y = layer_bot )) +
+  #geom_point(color="black", pch = 21, size=1) + 
+  #geom_point(aes(x=rootfrac_cumsum),color="black", pch=19, size=1)+
+  geom_smooth(aes(x=socfrac_cumsum, group=site_code), color="gray",lty="dashed", span=1.5)+
+  geom_smooth(aes(x=rootfrac_cumsum, color=land_cover), lty="solid", span=1.5)+
+  geom_smooth(aes(x=socfrac_cumsum, color=land_cover), lty="dashed", span=1.5)+
+  scale_color_manual(values=c("darkgreen","royalblue2"))+
+  scale_y_reverse(limits=c(200,0)) + # puts 0 at the top
+  xlab("Proportion accumulated")+
+  ylab("Soil depth (cm)")+
+  annotate("segment",lty="solid", x=0.1,xend=0.2,y=175,yend=175)+
+  annotate("segment",lty="dashed", x=0.1,xend=0.2,y=200,yend=200)+
+  annotate("text", label="SOC", x=0.25,y=200,hjust=0)+
+  annotate("text",label="Roots", x=0.25, y=175,hjust=0)+
+  annotate("point", x=0.03,y=200, pch=21)+
+  annotate("point", x=0.03,y=175, pch=19)+
+  geom_text(data=beta.stats, aes(x=x,y=y.soc,label=mean.soc), hjust=0)+
+  geom_text(data=beta.stats, aes(x=x,y=y.roots,label=mean.roots), hjust=0)+
+  guides(color=guide_legend(title="Land cover", ncol=1,title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
+  facet_wrap(~ land_cover) +
+  theme_bw()+
+  theme(legend.position="none", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12),strip.text = element_text(size=16))
+beta.summ
+ggsave(plot=beta.summ, file="beta_landcov_summary_v3.jpeg",dpi=300)
+
 #Stats for Objective 3b: Betas in mineral horizons only
 beta.m.nocult<-filter(beta.all.M, !land_cover=="cultivated")
 null.mod <- lmer(data=beta.m.nocult, beta_soc~(1|layer_bot_max))
@@ -672,9 +714,9 @@ summary(mod.reduced)
 Anova(mod.reduced)
 vif(mod.reduced)
 
-beta.all.nocult<-filter(beta.all, !land_cover=="cultivated")
+beta.all.nocult<-filter(beta.all, !land_cover %in% c("cultivated","shrubland"))
 null.mod <- lmer(data=beta.all.nocult, beta_soc~(1|layer_bot_max))
-mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*clay + (1|layer_bot_max))
+mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*land_cover + (1|layer_bot_max))
 summary(mod)  
 Anova(mod)
 em<-emmeans(mod, pairwise~land_cover, method="Tukey")
