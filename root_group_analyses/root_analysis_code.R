@@ -295,6 +295,7 @@ somNEONMegaSoilRoot_wholeprofilestats_myc$veg1<-tolower(somNEONMegaSoilRoot_whol
 somNEONMegaSoilRoot_wholeprofilestats_myc$veg2<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg2)
 somNEONMegaSoilRoot_wholeprofilestats_myc$veg3<-tolower(somNEONMegaSoilRoot_wholeprofilestats_myc$veg3)
 write.csv(somNEONMegaSoilRoot_wholeprofilestats_myc, "somNEONMegaSoilRoot_wholeprofilestats_myc.csv")
+somNEONMegaSoilRoot_wholeprofilestats_myc<- read.csv("somNEONMegaSoilRoot_wholeprofilestats_myc.csv")
 
 somNEONMegaSoilRoot_wholeprofilestats_mycjoin<-somNEONMegaSoilRoot_wholeprofilestats_myc %>%
   left_join(dplyr::select(mycodb_sum, PlantSpecies2018, myc), by=c("veg1"="PlantSpecies2018"))
@@ -702,36 +703,35 @@ beta.summ<-ggplot(somNEONMegaSoilRootSelSumDepth_noshcult,
 beta.summ
 ggsave(plot=beta.summ, file="beta_landcov_summary_v3.jpeg",dpi=300)
 
-#Stats for Objective 3b: Betas in mineral horizons only
-beta.m.nocult<-filter(beta.all.M, !land_cover=="cultivated")
-null.mod <- lmer(data=beta.m.nocult, beta_soc~(1|layer_bot_max))
-mod <- lmer(data=beta.m.nocult, beta_soc ~ beta_roots*map + (1|layer_bot_max))
-summary(mod)  
-Anova(mod)
-em<-emmeans(mod, pairwise~land_cover, method="Tukey")
-em
-vif(mod)
-anova(null.mod, mod)
 
-mod.reduced <- lmer(data=beta.all, beta_soc ~ beta_roots + land_cover + mat + (1|layer_bot_max))
-
-summary(mod.reduced)  
-Anova(mod.reduced)
-vif(mod.reduced)
-
+#Table S3a: mixed models for beta, organic+mineral, forest and grasslands only
 beta.all.nocult<-filter(beta.all, !land_cover %in% c("cultivated","shrubland"))
-null.mod <- lmer(data=beta.all.nocult, beta_soc~(1|layer_bot_max))
-mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*land_cover + (1|layer_bot_max))
-summary(mod)  
+mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*land_cover  + (1|layer_bot_max))
+em<-emmeans::emmeans(mod, pairwise~land_cover, method="Tukey")
+em
+summary(full.mod)  
+Anova(full.mod)
+AIC(full.mod)
+performance::performance_aicc(mod)
+performance::r2(mod)
+car::vif(full.mod)
+anova(null.mod, mod)
+
+#Table S3b: mixed models for Betas in mineral horizons only,forest and grasslands only
+beta.m.nocult<-filter(beta.all.M, !land_cover %in% c("cultivated","shrubland"))
+null.mod <- lmer(data=beta.m.nocult, beta_soc~(1|layer_bot_max))
+full.mod <- lmer(data=beta.m.nocult, beta_soc ~ beta_roots*land_cover + mat + (1|layer_bot_max))
+reduced.mod <- lmer(data=beta.m.nocult, beta_soc ~ beta_roots*land_cover + (1|layer_bot_max))
+summary(reduced.mod)  
 Anova(mod)
 em<-emmeans(mod, pairwise~land_cover, method="Tukey")
 em
-vif(mod)
+AIC(full.mod)
+performance::performance_aicc(reduced.mod)
+performance::r2(reduced.mod)
+car::vif(reduced.mod)
 anova(null.mod, mod)
 
-mod.reduced <- lmer(data=beta.all, beta_soc ~ beta_roots + land_cover + mat + (1|layer_bot_max))
-
-summary(mod.reduced)  
-Anova(mod.reduced)
-vif(mod.reduced)
-
+reduced.mod <- lm(data=beta.m.nocult, beta_soc ~ beta_roots*land_cover)
+Anova(reduced.mod)
+TukeyHSD(reduced.mod)
