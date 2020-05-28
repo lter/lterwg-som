@@ -245,7 +245,7 @@ ggplot(somNEONMega1,
            y = layer_bot )) +
   geom_point(pch = 21, color="black") + 
   geom_point(aes(x=rootfrac_cumsum), color="blue")+
-  geom_spline(aes(x=rootfrac_cumsum), color="blue")+ #formula = y ~ splines::bs(x, 2)
+  #geom_spline(aes(x=rootfrac_cumsum), color="blue")+ #formula = y ~ splines::bs(x, 2)
   geom_smooth(method=lm,color="black")+
   scale_y_reverse() + # puts 0 at the top
   #scale_x_log10() +
@@ -256,7 +256,6 @@ ggplot(somNEONMega1,
 library(lmerTest) # provides sig test for lmer models
 library(sjstats) #for psuedo-R2 in lmer models
 library(car) #for Anova
-library(MASS) #for stepAIC 
 
 
 #Objective 1a: whole profile sum SOC ~ whole profile root SOC; layer_bot as random effect
@@ -519,6 +518,46 @@ library(minqa)
   View(beta.all)
   plot(beta.all$beta_roots,beta.all$beta_soc)
   
+  #a loop for calculating betas for each site ****FORCING (0,0)****
+write.csv(somNEONMegaSoilRootSelSumDepth, "somNEONMegaSoilRootSelSumDepth.csv") #I couldn't figure out add_row with a grouped df, so I opened Excel and did it
+somNEONMegaSoilRootSelSumDepthZeros <- read.csv("somNEONMegaSoilRootSelSumDepth.csv")
+# a function to calculate root beta for each site with Zeros
+min.rss.roots.zeros <- function(beta){
+  x = somNEONMegaSoilRootSelSumDepthZeros_site$rootfrac_cumsum #I replaced tgc_site with somNEONMegaSoilRootSelSumDepth_site
+  y = 1-beta^somNEONMegaSoilRootSelSumDepthZeros_site$layer_bot
+  sum((x-y)^2,na.rm=T)
+}
+
+# a function to calculate soil beta for each site
+min.rss.soc.zeros <- function(beta){
+  x = somNEONMegaSoilRootSelSumDepthZeros_site$socfrac_cumsum
+  y = 1-beta^somNEONMegaSoilRootSelSumDepthZeros_site$layer_bot
+  sum((x-y)^2,na.rm=T)
+}
+  
+  results.list = list()
+  for (site in somNEONMegaSoilRootSelSumDepthZeros$site_code) {
+    
+    somNEONMegaSoilRootSelSumDepthZeros_site <- filter(somNEONMegaSoilRootSelSumDepthZeros, site_code == site)
+    beta_site_roots <- bobyqa(0.1,min.rss.roots.zeros,0.01,1)$par
+    beta_site_soc <- bobyqa(0.1,min.rss.soc.zeros,0.01,1)$par
+    lhs <- somNEONMegaSoilRootSelSumDepthZeros_site$rootfrac_cumsum
+    rhs <- 1-beta_site_roots^somNEONMegaSoilRootSelSumDepthZeros_site$layer_bot
+    r2_site_roots <- summary(lm(lhs ~ rhs))$r.squared
+    lhs <- somNEONMegaSoilRootSelSumDepthZeros_site$socfrac_cumsum
+    rhs <- 1-beta_site_soc^somNEONMegaSoilRootSelSumDepthZeros_site$layer_bot
+    r2_site_soc <- summary(lm(lhs ~ rhs))$r.squared
+    results.list[[site]] = tibble(beta_roots = beta_site_roots,
+                                  beta_soc = beta_site_soc,
+                                  r2_roots = r2_site_roots,
+                                  r2_soc = r2_site_soc,
+                                  site_code = site)
+  }
+  
+  beta.all.zeros <- bind_rows(results.list)
+  View(beta.all.zeros)
+  plot(beta.all.zeros$beta_roots,beta.all.zeros$beta_soc)
+  
 # Calculating betas for M horizons separately
 somNEONMegaSoilRootSelSumDepth_hzn <- somNEONMegaSoilRootSelSumDepth %>%
   mutate(hzn_type = ifelse(grepl("^O", hzn), "organic", "mineral"))
@@ -585,6 +624,11 @@ beta.all.M<-beta.all.M %>%
   filter(!site_code%in%c("SOAP", "BONA", "DEJU", "HEAL", "MLBS","ABBY","WREF","CLBJ","JORN","GUAN","LAJA","GRSM","TEAK","BARR")) #these sites have betaSOC = 0.1
 write.csv(beta.all.M, "beta.all.M_022820.csv")
 beta.all.M<-read.csv("beta.all.M_022820.csv") 
+
+beta.all.zeros<-beta.all.zeros %>%
+  left_join(somNEONMegaSoilRootCovariates.ldcv, by= "site_code")%>%
+  filter(!site_code%in%c("CLBJ","JORN","GUAN","LAJA","GRSM","TEAK","BARR")) #these sites have betaSOC = 0.1
+write.csv(beta.all.zeros, "beta.all.zeros_052820.csv")
 
 #quick summary stats
 beta.stats<-beta.all %>% filter(land_cover %in% c("forest","rangeland/grassland")) %>%
@@ -706,7 +750,15 @@ ggsave(plot=beta.summ, file="beta_landcov_summary_v3.jpeg",dpi=300)
 
 #Table S3a: mixed models for beta, organic+mineral, forest and grasslands only
 beta.all.nocult<-filter(beta.all, !land_cover %in% c("cultivated","shrubland"))
+beta.all.for<-filter(beta.all, land_cover=="forest")
+beta.all.gr<-filter(beta.all, land_cover=="rangeland/grassland")
+
 mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*land_cover  + (1|layer_bot_max))
+null.mod <- lmer(data=beta.all.for, beta_soc~(1|layer_bot_max))
+full.mod <- lmer(data=beta.all.for, beta_soc ~ beta_roots + mat+ map + clay  + (1|layer_bot_max))
+reduced.mod <- lmer(data=beta.m.gr, beta_soc ~ map + mat + clay + (1|layer_bot_max))
+summary(full.mod)  
+
 em<-emmeans::emmeans(mod, pairwise~land_cover, method="Tukey")
 em
 summary(full.mod)  
@@ -719,19 +771,25 @@ anova(null.mod, mod)
 
 #Table S3b: mixed models for Betas in mineral horizons only,forest and grasslands only
 beta.m.nocult<-filter(beta.all.M, !land_cover %in% c("cultivated","shrubland"))
-null.mod <- lmer(data=beta.m.nocult, beta_soc~(1|layer_bot_max))
-full.mod <- lmer(data=beta.m.nocult, beta_soc ~ beta_roots*land_cover + mat + (1|layer_bot_max))
-reduced.mod <- lmer(data=beta.m.nocult, beta_soc ~ beta_roots*land_cover + (1|layer_bot_max))
-summary(reduced.mod)  
-Anova(mod)
+beta.m.for<-filter(beta.all.M, land_cover=="forest")
+beta.m.gr<-filter(beta.all.M, land_cover=="rangeland/grassland")
+
+null.mod <- lmer(data=beta.m.gr, beta_soc~(1|layer_bot_max))
+full.mod <- lmer(data=beta.m.gr, beta_soc ~ beta_roots + mat+ map + clay  + (1|layer_bot_max))
+reduced.mod <- lmer(data=beta.m.gr, beta_soc ~ map + mat + clay + (1|layer_bot_max))
+summary(full.mod)  
+Anova(full.mod)
 em<-emmeans(mod, pairwise~land_cover, method="Tukey")
 em
-AIC(full.mod)
 performance::performance_aicc(reduced.mod)
 performance::r2(reduced.mod)
-car::vif(reduced.mod)
-anova(null.mod, mod)
+car::vif(full.mod)
+anova(null.mod, reduced.mod)
 
-reduced.mod <- lm(data=beta.m.nocult, beta_soc ~ beta_roots*land_cover)
-Anova(reduced.mod)
-TukeyHSD(reduced.mod)
+reduced.mod <- lm(data=beta.m.nocult, beta_soc[beta.m.nocult$land_cover=="rangeland/grassland"] ~ beta_roots[beta.m.nocult$land_cover=="rangeland/grassland"])
+summary(reduced.mod)
+car::Anova(reduced.mod)
+TukeyHSD(aov(reduced.mod), which="land_cover")
+corr<-lm(data=beta.all.nocult,beta_roots~land_cover)
+Anova(corr)
+t.test(beta.all.nocult$beta_roots[beta.all.nocult$land_cover=="forest"],beta.all.nocult$beta_roots[beta.all.nocult$land_cover=="rangeland/grassland"])
