@@ -74,7 +74,7 @@ options(scipen = 999) # no sci. notation
 # build a reference of directories containing version 2 of the key file
 
 key_v2_dirs <- tibble(
-  fullPath = list.files(path = "Data_downloads/",
+  fullPath = list.files(path = "/Data_downloads/",
                         recursive = TRUE,
                         full.names = TRUE)
 ) %>% 
@@ -88,12 +88,15 @@ key_v2_dirs <- tibble(
 # function to harvest HMGZD data files (*.HMGZD.xlsx) from directories
 # identified above in which there is a version 2 of the key file present
 harvest_hmgzd_data <- function(directory) {
-  
+
   map(.x = list.files(path = directory,
-                      pattern = "HMGZD\\.",
-                      full.names = TRUE),
-      ~read_excel(.x, na = c("", "NA")))
-  
+      pattern = "HMGZD\\.",
+      full.names = TRUE),
+    ~ read_excel(path = .x,
+      na = c("", "NA"),
+      guess_max = Inf)
+  )
+
 }
 
 # harvest HMGZD data files, compact will remove any empty list items (e.g.,
@@ -147,12 +150,12 @@ targets <- c(
 )
 
 cols_to_character <- function(entity) {
- 
+
   subTargets <- intersect(colnames(entity), targets)
- 
+
   entity %>%
     mutate_at(vars(subTargets), as.character)
- 
+
 }
 
 homogenizedData <- map(.x = homogenizedData, .f = cols_to_character)
