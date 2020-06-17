@@ -276,7 +276,9 @@ somNEONMegaSoilRootCovariates <- somNEONMegaSoil.withRoot %>% # somNEONMegaSoilR
 # Join covariates 
 somNEONMegaSoilRoot_wholeprofilestats <- somNEONMegaSoil.withRoot.Profile %>% 
   left_join(somNEONMegaSoilRootCovariates, by="site_code") %>%
-  filter(!is.na(veg_note_profile))
+  filter(!is.na(veg_note_profile)) %>%
+  mutate(bgb_c_stock_norm = (bgb_c_stock_sum/layer_bot_max)*200,
+         soc_c_stock_norm = (lyr_soc_stock_calc_sum/layer_bot_max)*200)
 
 #Add mycorrhizal type from Myco Database, cite Chaudhary, V., Rúa, M., Antoninka, A. et al. MycoDB, a global database of plant response to mycorrhizal fungi. Sci Data 3, 160028 (2016). https://doi.org/10.1038/sdata.2016.28, Chaudhary, V. Bala et al. (2017), Data from: MycoDB, a global database of plant response to mycorrhizal fungi, v4, Dryad, Dataset, https://doi.org/10.5061/dryad.723m1
 mycodb<-read.csv("MycoDB_version4.csv")
@@ -351,9 +353,17 @@ t.values <- mod$coeff / sqrt(diag(vcov(mod)))
 partcorr <- sqrt((t.values^2) / ((t.values^2) + mod$df.residual))
 partcorr
 
+#Alternative analysis: regualar linear regression, using soc and bgb normalized for depth. Whole profile measures of bgb and soc were summed, divided by layer_bot_max, and multiplied by 200 cm to get back to a stock
+mod<-lm(data=somNEONMegaSoilRoot_wholeprofilestats_noshrubtundra, soc_c_stock_norm ~ bgb_c_stock_norm)
+summary(mod)
+Anova(mod)
+
+#filter out tundra bc it's an outlier
+somNEONMegaSoilRoot_wholeprofilestats_noshrubtundra <- filter(somNEONMegaSoilRoot_wholeprofilestats_noshrub, !eco_region=="tundra")
+
 #Figure 1
 write.csv(somNEONMegaSoilRoot_wholeprofilestats, "somNEONMegaSoilRoot_wholeprofilestats.csv")
-fig1_ecoreg <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
+fig1_ecoreg <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stock_norm/1000, y=soc_c_stock_norm/1000))+
   geom_smooth(method=lm, color="black")+
   geom_point(pch=21, size=3, aes(fill = eco_region))+ # alternatively, add aes(fill=land_cover)
   scale_fill_manual(values=c("darkgreen","tan4","springgreen1","sienna3","tan","dodgerblue","gray"))+
@@ -362,7 +372,7 @@ fig1_ecoreg <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_st
   guides(fill=guide_legend(title="Land Cover", ncol=1, title.theme = element_text(size=14, angle=0), label.theme = element_text(size=14, angle=0)))+
   theme(legend.position="right", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=16),axis.text=element_text(size=14))
 fig1_ecoreg
-ggsave(plot=fig1_ecoreg, filename="Fig1_wholeprof_ecoregion.jpeg", dpi=300)
+ggsave(plot=fig1_ecoreg, filename="Fig1_wholeprof_ecoregion_norm.jpeg", dpi=300)
 
 #Alternate Figure 1
 fig1_clay <- ggplot(data=somNEONMegaSoilRoot_wholeprofilestats, aes(x=bgb_c_stock_sum/1000, y=lyr_soc_stock_calc_sum/1000))+
@@ -723,12 +733,12 @@ segments<-data.frame(x=c(0.1,0.1,0,0,0),xend=c(0.2,0.2,0,0,0),y=c(175,200,0,0,0)
 beta.summ<-ggplot(somNEONMegaSoilRootSelSumDepth_noshcult, 
                   aes(x = socfrac_cumsum, 
                       y = layer_bot )) +
-  #geom_point(color="black", pch = 21, size=1) + 
-  #geom_point(aes(x=rootfrac_cumsum),color="black", pch=19, size=1)+
-  geom_smooth(aes(x=socfrac_cumsum, group=site_code), color="gray",lty="dashed", span=1.5)+
-  geom_smooth(aes(x=rootfrac_cumsum, color=land_cover), lty="solid", span=1.5)+
-  geom_smooth(aes(x=socfrac_cumsum, color=land_cover), lty="dashed", span=1.5)+
-  scale_color_manual(values=c("darkgreen","royalblue2"))+
+  geom_point(color="black", pch = 21, size=1) + 
+  geom_point(aes(x=rootfrac_cumsum),color="black", pch=19, size=1)+
+  #geom_smooth(aes(x=socfrac_cumsum, group=site_code), color="gray",lty="dashed", span=1.5)+
+  geom_smooth(data=subset(somNEONMegaSoilRootSelSumDepth_noshcult, land_cover=="rangeland/grassland"), aes(x=rootfrac_cumsum), lty="solid", span=1.5)+
+  geom_smooth(data=subset(somNEONMegaSoilRootSelSumDepth_noshcult, land_cover=="rangeland/grassland"), aes(x=socfrac_cumsum), lty="dashed", span=1.5)+
+  #scale_color_manual(values=c("darkgreen","royalblue2"))+
   scale_y_reverse(limits=c(200,0)) + # puts 0 at the top
   xlab("Proportion accumulated")+
   ylab("Soil depth (cm)")+
@@ -745,7 +755,7 @@ beta.summ<-ggplot(somNEONMegaSoilRootSelSumDepth_noshcult,
   theme_bw()+
   theme(legend.position="none", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12),strip.text = element_text(size=16))
 beta.summ
-ggsave(plot=beta.summ, file="beta_landcov_summary_v3.jpeg",dpi=300)
+ggsave(plot=beta.summ, file="beta_landcov_summary_v4.jpeg",dpi=300)
 
 
 #Table S3a: mixed models for beta, organic+mineral, forest and grasslands only
@@ -754,14 +764,14 @@ beta.all.for<-filter(beta.all, land_cover=="forest")
 beta.all.gr<-filter(beta.all, land_cover=="rangeland/grassland")
 
 mod <- lmer(data=beta.all.nocult, beta_soc ~ beta_roots*land_cover  + (1|layer_bot_max))
-null.mod <- lmer(data=beta.all.for, beta_soc~(1|layer_bot_max))
+null.mod <- lmer(data=beta.all.nocult, beta_soc~(1|layer_bot_max))
 full.mod <- lmer(data=beta.all.for, beta_soc ~ beta_roots + mat+ map + clay  + (1|layer_bot_max))
 reduced.mod <- lmer(data=beta.m.gr, beta_soc ~ map + mat + clay + (1|layer_bot_max))
 summary(full.mod)  
 
 em<-emmeans::emmeans(mod, pairwise~land_cover, method="Tukey")
 em
-summary(full.mod)  
+summary(mod)  
 Anova(full.mod)
 AIC(full.mod)
 performance::performance_aicc(mod)
@@ -774,13 +784,12 @@ beta.m.nocult<-filter(beta.all.M, !land_cover %in% c("cultivated","shrubland"))
 beta.m.for<-filter(beta.all.M, land_cover=="forest")
 beta.m.gr<-filter(beta.all.M, land_cover=="rangeland/grassland")
 
-null.mod <- lmer(data=beta.m.gr, beta_soc~(1|layer_bot_max))
-full.mod <- lmer(data=beta.m.gr, beta_soc ~ beta_roots + mat+ map + clay  + (1|layer_bot_max))
-reduced.mod <- lmer(data=beta.m.gr, beta_soc ~ map + mat + clay + (1|layer_bot_max))
+null.mod <- lmer(data=beta.all.M, beta_soc~(1|layer_bot_max))
+full.mod <- lmer(data=beta.all.M, beta_soc ~ beta_roots + mat+ map + (1|layer_bot_max))
+reduced.mod <- lmer(data=beta.all.M, beta_soc ~ mat + (1|layer_bot_max))
 summary(full.mod)  
 Anova(full.mod)
-em<-emmeans(mod, pairwise~land_cover, method="Tukey")
-em
+emmeans::emmeans(reduced.mod, pairwise~land_cover, method="Tukey")
 performance::performance_aicc(reduced.mod)
 performance::r2(reduced.mod)
 car::vif(full.mod)
