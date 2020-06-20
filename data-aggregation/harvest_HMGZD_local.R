@@ -74,7 +74,7 @@ options(scipen = 999) # no sci. notation
 # build a reference of directories containing version 2 of the key file
 
 key_v2_dirs <- tibble(
-  fullPath = list.files(path = "/Data_downloads/",
+  fullPath = list.files(path = "Data_downloads/",
                         recursive = TRUE,
                         full.names = TRUE)
 ) %>% 
@@ -310,7 +310,9 @@ varsToRemove <- c(
   "na",               # copied to NA
   "mg",               # copied to Mg
   "fe_HCl",           # user added / not standardized
-  "n_replicates"      # user added / not standardized
+  "n_replicates",     # user added / not standardized
+  "c_tot_se",         # user added / not standardized
+  "n_tot_se"          # user added / not standardized
 )
 
 boundData <- boundData %>%
