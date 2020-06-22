@@ -381,11 +381,17 @@ boundData <- boundData %>%
     eco_region = case_when(
       !is.na(eco_type) ~ eco_type,
       TRUE ~ eco_region
-    )
+      ),
+    # standardize eco_regions
+    eco_region = case_when(
+      eco_region == "Temperate Grasslands, Savannas, and Shrublands" ~ "temperate grassland, savanna and shrubland",
+      TRUE ~ eco_region
+      ),
+    eco_region = tolower(eco_region)
     ) %>%
 select(-all_of(varsToRemove))
 
-  
+ 
 # write aggregated data to file -------------------------------------------
 
 saveRDS(boundData, paste0('somCompositeData_', Sys.Date(), '.rds'))
