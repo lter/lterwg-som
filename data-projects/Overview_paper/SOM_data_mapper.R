@@ -20,7 +20,8 @@ if (file.exists('C:/github/lterwg-som')){
   tarball <- tarball %>% filter(google_dir != "NA")
 } else {
   #for Will
-  tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-05-12.rds")  
+#  tarball <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-05-12.rds")  
+  tarball <- read.csv("/Users/wwieder/Will/git_repos_local/lterwg-som/521_soils_data_harmonization_415ab64c9ef9f80c3bd65fd45441e8e8.csv")  
   tarball <- tarball %>% filter(google_dir != "NA")
 }
 
@@ -111,6 +112,7 @@ combined_maps <- ggarrange(mapWorld, mapUSA, ncol = 1, nrow = 2)
 combined_maps
 
 ggsave(plot=combined_maps, filename = "fig4.jpg", width = 8, height = 6 , dpi = 300)
+ggsave(plot=combined_maps, filename = "fig4.pdf", width = 8, height = 6 , dpi = 300)
 
 
 
