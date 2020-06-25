@@ -66,15 +66,15 @@ library(googledrive)
 
 # options -----------------------------------------------------------------
 
-options(httr_oob_default=TRUE) # create out-of-band oauth token in server env
-options(scipen=999) # no sci. notation
+options(httr_oob_default = TRUE) # create out-of-band oauth token in server env
+options(scipen = 999) # no sci. notation
 
 # identify homogenized data files -----------------------------------------
 
 # build a reference of directories containing version 2 of the key file
 
 key_v2_dirs <- tibble(
-  fullPath = list.files(path = 'Data_downloads/',
+  fullPath = list.files(path = "Data_downloads/",
                         recursive = TRUE,
                         full.names = TRUE)
 ) %>% 
@@ -88,17 +88,20 @@ key_v2_dirs <- tibble(
 # function to harvest HMGZD data files (*.HMGZD.xlsx) from directories
 # identified above in which there is a version 2 of the key file present
 harvest_hmgzd_data <- function(directory) {
-  
+
   map(.x = list.files(path = directory,
-                      pattern = "HMGZD\\.",
-                      full.names = TRUE),
-      ~read_excel(.x, na = c("", "NA")))
-  
+      pattern = "HMGZD\\.",
+      full.names = TRUE),
+    ~ read_excel(path = .x,
+      na = c("", "NA"),
+      guess_max = Inf)
+  )
+
 }
 
 # harvest HMGZD data files, compact will remove any empty list items (e.g.,
 # where there is a key file but the files were not homogenized)
-homogenizedData <- map(.x = key_v2_dirs, .f = harvest_hmgzd_data) %>% 
+homogenizedData <- map(.x = key_v2_dirs, .f = harvest_hmgzd_data) %>%
   compact()
 
 # unlist will flatten the list such that data sets with multiple HMGZD data
@@ -115,44 +118,44 @@ homogenizedData <- unlist(homogenizedData, recursive = FALSE)
 
 # vector of data type conflicts
 targets <- c(
-  # 'lat',
-  # 'long',
-  'L1',
-  'L2',
-  'L3',
-  'L4',
-  # 'layer_top',
-  # 'layer_bot',
-  # 'bd_samp',
-  'NA_1',
-  'NA_2',
-  'number_treatments',
-  # 'tx_start',
-  # 'bgb_upperdiam',
-  # 'elevation',
-  # 'map',
-  'tx_L1',
-  'tx_L2',
-  'tx_L3',
-  'tx_L4',
-  'observation_date',
-  'observation_date_1',
-  'observation_date_2',
-  'control_id' #,
-  # 'modification_date',
-  # 'agb'
-  # 'mat',
-  # 'wood_lit_c',
-  # 'slope'
+  # "lat",
+  # "long",
+  "L1",
+  "L2",
+  "L3",
+  "L4",
+  # "layer_top",
+  # "layer_bot",
+  # "bd_samp",
+  "NA_1",
+  "NA_2",
+  "number_treatments",
+  # "tx_start",
+  # "bgb_upperdiam",
+  # "elevation",
+  # "map",
+  "tx_L1",
+  "tx_L2",
+  "tx_L3",
+  "tx_L4",
+  "observation_date",
+  "observation_date_1",
+  "observation_date_2",
+  "control_id" #,
+  # "modification_date",
+  # "agb"
+  # "mat",
+  # "wood_lit_c",
+  # "slope"
 )
 
 cols_to_character <- function(entity) {
-  
+
   subTargets <- intersect(colnames(entity), targets)
-  
-  entity %>% 
+
+  entity %>%
     mutate_at(vars(subTargets), as.character)
-  
+
 }
 
 homogenizedData <- map(.x = homogenizedData, .f = cols_to_character)
@@ -164,6 +167,9 @@ boundData <- bind_rows(homogenizedData)
 
 
 # tarball bulk processing -------------------------------------------------
+
+# the following are a series of steps for calculating new variables and minor
+# formatting of existing data
 
 boundData <- boundData %>%
   mutate(
@@ -210,7 +216,7 @@ boundData <- boundData %>%
     merge_align = toupper(merge_align),
     experiments = toupper(experiments)
   ) %>%  # close mutate
-  rename('bd_methods_notes' = `^bd_`)
+  rename("bd_methods_notes" = `^bd_`)
 
 
 # identify controls -------------------------------------------------------
@@ -275,7 +281,117 @@ NN_columns_to_clean <- c("bd_samp", "lyr_soc", "lyr_n_tot", "p_ex_1", "k", "ca",
 boundData <- boundData %>% 
   mutate_at(.vars = NN_columns_to_clean, .funs = ~replace(., grepl("nutnet", network, ignore.case = T) & observation_date >= tx_start, NA))
 
-  
+
+# additional standardization ---------------------------------------------------
+
+# Initial efforts to publish these data revealed a suite of variables that were
+# added by users that were not part of the template key file. Basically, these
+# were identified as variables in tarball but no in the key file template. Some
+# of these were addressed by rehomoging the data. Some became new variables
+# (e.g., litterfall_anpp). Some were removed as there was no way to standardize
+# them (e.g., n_replicates) and some were recoded into the variable where the
+# information should reside (e.g., mg).
+
+varsToRemove <- c(
+  "layer",            # copied to clay
+  "dominant_species", # user added / not standardized
+  "comment_location", # copied to loc_comments
+  "doi_number",       # copied to data_doi
+  "aspect",           # copied to aspect_class
+  "comments",         # copied to loc_comments
+  "loi",              # copied to lyr_loi
+  "no3_n",            # user added / not standardized
+  "nh4_n",            # user added / not standardized
+  "align",            # copied to align_1
+  "eco_type",         # copied to eco_region
+  "al",               # user added / not standardized
+  "k",                # copied to K
+  "ca",               # copied to Ca
+  "na",               # copied to NA
+  "mg",               # copied to Mg
+  "fe_HCl",           # user added / not standardized
+  "n_replicates",     # user added / not standardized
+  "c_tot_se",         # user added / not standardized
+  "n_tot_se"          # user added / not standardized
+)
+
+boundData <- boundData %>%
+  mutate(
+    # AND misidentified layer as clay
+    clay = case_when(
+      !is.na(layer) ~ layer,
+      TRUE ~ clay
+      ),
+    # doi_number should be data_doi
+    data_doi = case_when(
+      !is.na(doi_number) ~ doi_number,
+      TRUE ~ data_doi
+      ),
+    # comment_location should be loc_comments
+    loc_comments = case_when(
+      !is.na(comment_location) ~ comment_location,
+      TRUE ~ loc_comments
+      ),
+    # aspect should be aspect_class
+    aspect_class = case_when(
+      !is.na(aspect) ~ aspect,
+      TRUE ~ aspect_class
+      ),
+    # comments should be loc_comments
+    loc_comments = case_when(
+      !is.na(comments) ~ comments,
+      TRUE ~ loc_comments
+      ),
+    # loi should be lyr_loi
+    lyr_loi = case_when(
+      !is.na(loi) ~ loi,
+      TRUE ~ lyr_loi
+      ),
+    # ca should be Ca
+    Ca = case_when(
+      !is.na(ca) ~ ca,
+      TRUE ~ Ca
+      ),
+    # mg should be Mg
+    Mg = case_when(
+      !is.na(mg) ~ mg,
+      TRUE ~ Mg
+      ),
+    # na should be Na
+    Na = case_when(
+      !is.na(na) ~ na,
+      TRUE ~ Na
+      ),
+    # k should be K
+    K = case_when(
+      !is.na(k) ~ k,
+      TRUE ~ K
+      ),
+    # align should be align_1 but first remove boolean align from
+    # NEON_initialChar
+    align = case_when(
+      google_dir == "NEON_initialChar" ~ NA_character_,
+      TRUE ~ align
+      ),
+    align_1 = case_when(
+      !is.na(align) ~ align,
+      TRUE ~ align_1
+      ),
+    # eco_type should be eco_region
+    eco_region = case_when(
+      !is.na(eco_type) ~ eco_type,
+      TRUE ~ eco_region
+      ),
+    # standardize eco_regions
+    eco_region = case_when(
+      eco_region == "Temperate Grasslands, Savannas, and Shrublands" ~ "temperate grassland, savanna and shrubland",
+      TRUE ~ eco_region
+      ),
+    eco_region = tolower(eco_region)
+    ) %>%
+select(-all_of(varsToRemove))
+
+ 
 # write aggregated data to file -------------------------------------------
 
 saveRDS(boundData, paste0('somCompositeData_', Sys.Date(), '.rds'))
