@@ -12,7 +12,8 @@ library(ggplot2)
 library(tidyverse)
 library(ggpubr)
 
-data.all <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-05-12.rds")  
+#data.all <- readRDS("/Users/wwieder/Will/git_repos_local/lterwg-som/somCompositeData_2020-05-12.rds")  
+data.all <- read.csv("/Users/wwieder/Will/git_repos_local/lterwg-som/521_soils_data_harmonization_415ab64c9ef9f80c3bd65fd45441e8e8.csv")  
 
 data.all$full_name <- paste0(data.all$site_code," ",data.all$location_name)  #Concatenate strings
 data.all <- data.all %>% mutate(full_name = gsub("NA", "", full_name))  #Remove NA from strings
@@ -37,7 +38,7 @@ print(list(unique(data.all$author_PersonName)))
 # --- print some basic database characteristics ---
 print(dim(data.all))
 # total database
-print(dim(data.all)[1]*dim(data.all)[2])
+print(dim(data.all)[1]*dim(data.all)[2]*1e-6)
 # not missing observations
 print(sum(!is.na(data.all)))
 # % possible observations
