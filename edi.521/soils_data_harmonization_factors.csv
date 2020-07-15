@@ -1,0 +1,122 @@
+attributeName,code,definition
+network,CZO,Critical Zone Observatory
+network,DIRT,Detrital Input and Removal Treatments
+network,LTER,Long Term Ecological Reserach
+network,NEON,National Ecological Observatory Network
+network,none,none
+network,NutNet,Nutrient Network
+aspect_class,N,north
+aspect_class,NNE,north north east
+aspect_class,NW,north west
+aspect_class,S,south
+aspect_class,SW,south west
+slope_shape,convergent,convergent
+slope_shape,variable,variable
+drainage_class,moderately well,moderately well
+drainage_class,somewhat excessively,somewhat excessively
+drainage_class,variable,variable
+drainage_class,well,well
+parent_transport,alluvium,alluvium
+parent_transport,colluvium,colluvium
+parent_transport,residuam,residuam
+parent_transport,residuum,residuum
+parent_material,evaporites,evaporites
+parent_material,igneous extrusive,igneous extrusive
+parent_material,igneous intrusive,igneous intrusive
+parent_material,interbedded,interbedded
+parent_material,metamorphic,metamorphic
+parent_material,sedimentary-clastics,sedimentary-clastics
+rock_chem,CaCO3 and shales,CaCO3 and shales
+rock_chem,felsic,felsic
+rock_chem,intermediate,intermediate
+land_cover,cultivated,cultivated
+land_cover,cultivatedCrops,cultivatedCrops
+land_cover,deciduousForest,deciduousForest
+land_cover,dwarfScrub,dwarfScrub
+land_cover,emergentHerbaceousWetlands,emergentHerbaceousWetlands
+land_cover,evergreenForest,evergreenForest
+land_cover,forest,forest
+land_cover,grasslandHerbaceous,grasslandHerbaceous
+land_cover,mixedForest,mixedForest
+land_cover,pastureHay,pastureHay
+land_cover,rangeland/grassland,rangeland/grassland
+land_cover,sedgeHerbaceous,sedgeHerbaceous
+land_cover,shrubland,shrubland
+land_cover,shrubScrub,shrubScrub
+land_cover,urban,urban
+land_cover,woodyWetlands,woodyWetlands
+eco_region,agricultural,agricultural
+eco_region,boreal coniferous forest,boreal coniferous forest
+eco_region,boreal forest/taiga,boreal forest/taiga
+eco_region,desert or xeric shrubland,desert or xeric shrubland
+eco_region,grassland,grassland
+eco_region,"mediterranean forest, woodland, or scrub","mediterranean forest, woodland, or scrub"
+eco_region,savanna,savanna
+eco_region,shrubland,shrubland
+eco_region,temperate broadleaf or mixed forest,temperate broadleaf or mixed forest
+eco_region,temperate coniferous forest,temperate coniferous forest
+eco_region,temperate deciduous forest,temperate deciduous forest
+eco_region,"temperate grassland, savanna and shrubland","temperate grassland, savanna and shrubland"
+eco_region,tropical deciduous forest,tropical deciduous forest
+eco_region,tropical evergreen forest,tropical evergreen forest
+eco_region,"tropical or subtropical grassland, savanna, or shrubland","tropical or subtropical grassland, savanna, or shrubland"
+eco_region,tropical or subtropical moist broadleaf forest,tropical or subtropical moist broadleaf forest
+eco_region,tundra,tundra
+loc_texture_class,clay,clay
+loc_texture_class,clay loam,clay loam
+loc_texture_class,loam,loam
+loc_texture_class,loamy sand,loamy sand
+loc_texture_class,sand,sand
+loc_texture_class,sandy loam,sandy loam
+loc_texture_class,silty clay loam,silty clay loam
+loc_texture_class,silty loam,silty loam
+time_series,NO,is not a time-series study
+time_series,YES,is a time-series study
+gradient,NO,is not a gradient study
+gradient,YES,is a gradient study
+experiments,NO,study does not feature experimental manipulations
+experiments,YES,study features experimental manipulations
+merge_align,NO,data from the same study but of different types are not distributed across rows
+merge_align,YES,data from the same study but of different types are distributed across rows
+key_version,2,key file version 2
+L1_level,Block,Block
+L1_level,Field,Field
+L1_level,landscape position,landscape position
+L1_level,Plot,Plot
+L1_level,Site,Site
+L1_level,Transect,Transect
+L1_level,Watershed,Watershed
+L2_level,Block,Block
+L2_level,landscape position,landscape position
+L2_level,Plot,Plot
+L2_level,Replicate,Replicate
+L2_level,Transect,Transect
+L3_level,landscape position,landscape position
+L3_level,Plot,Plot
+L3_level,Replicate,Replicate
+L3_level,Transect,Transect
+L4_level,Plot,Plot
+L4_level,Replicate,Replicate
+L5_level,Plot,Plot
+L5_level,Replicate,Replicate
+tx_L1_level,ag_harvest,ag_harvest
+tx_L1_level,CO2,CO2
+tx_L1_level,fire,fire
+tx_L1_level,forest_harvest,forest_harvest
+tx_L1_level,litter_manip,litter_manip
+tx_L1_level,nutrients,nutrients
+tx_L1_level,other (add notes),other (add notes)
+tx_L1_level,precip,precip
+tx_L1_level,warming,warming
+tx_L2_level,fire,fire
+tx_L2_level,nutrients,nutrients
+tx_L2_level,other (add notes),other (add notes)
+tx_L3_level,ag_harvest,ag_harvest
+tx_L3_level,other (add notes),other (add notes)
+tx_L3_level,precip,precip
+tx_L4_level,other (add notes),other (add notes)
+tx_L5_level,other (add notes),other (add notes)
+tx_L6_level,warming,warming
+frc_scheme,SPT,Sodium polytungstate (sp) – a way to density fractionate soils by floating off the light fracton
+control_sample,FALSE,"data does not reflect a control sample (i.e., reflects a treatment or experimental condition)"
+control_sample,TRUE,"data reflects a control sample (i.e., does not reflect a treatment or experimental condition)"

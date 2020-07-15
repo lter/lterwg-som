@@ -1,0 +1,5 @@
+%s/<creator id="creator.dan.childers">/<creator>/g
+%s/<creator id="creator.nancy.grimm">/<creator>/g
+%s/<creator id="creator.jason.kaye">/<creator>/g
+%s/<creator id="CWT-LTER">/<creator>/g
+%s/<creator id="creator.diane.hope">/<creator>/g
