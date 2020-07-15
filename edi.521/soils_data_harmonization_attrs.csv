@@ -1,0 +1,158 @@
+attributeName,formatString,unit,numberType,definition,attributeDefinition,columnClasses,minimum,maximum
+google_dir,NA,NA,NA,name of the directory on Google Drive where the data reside (a surrogate for identifying distinct SoDaH data entities at the directory level),name of the directory on Google Drive where the data reside (a surrogate for identifying distinct SoDaH data entities at the directory level),character,NA,NA
+data_file,NA,NA,NA,name of the file that was homogenized,name of the file that was homogenized,character,NA,NA
+curator_PersonName,NA,NA,NA,Name of Person Entering Data,Name of Person Entering Data,character,NA,NA
+curator_organization,NA,NA,NA,Organization of Person Entering Data,Organization of Person Entering Data,character,NA,NA
+curator_email,NA,NA,NA,Email Address of Person Entering Data,Email Address of Person Entering Data,character,NA,NA
+modification_date,YYYY-MM-DD,NA,NA,NA,Template Modification Date,Date,NA,NA
+author_PersonName,NA,NA,NA,Corresponding Author of Publication/ Dataset,Corresponding Author of Publication/ Dataset,character,NA,NA
+author_email,NA,NA,NA,Corresponding Author Email,Corresponding Author Email,character,NA,NA
+author_orcid_id,NA,NA,NA,Corresponding Author ORCID ID Number,Corresponding Author ORCID ID Number,character,NA,NA
+addit_contact_person,NA,NA,NA,Additional contacts (site leads),Additional contacts (site leads),character,NA,NA
+addit_contact_email,NA,NA,NA,Additional contacts Email,Additional contacts Email,character,NA,NA
+bibliographical_reference,NA,NA,NA,Bibliographical Reference,Bibliographical Reference,character,NA,NA
+data_doi,NA,NA,NA,Dataset Digital Object Identifier (DOI) Number,Dataset Digital Object Identifier (DOI) Number,character,NA,NA
+network,NA,NA,NA,NA,"Network (e.g. LTER, CZO, DIRT, NutNet, etc)",factor,NA,NA
+site_code,NA,NA,NA,Site code (e.g. LUQ) or name,Site code (e.g. LUQ) or name,character,NA,NA
+location_name,NA,NA,NA,Location name,Location name,character,NA,NA
+lat,NA,degree,real,NA,Latitude (degrees),numeric,-51.916028,78.7
+long,NA,degree,real,NA,Longitude (degrees),numeric,-161.96455,152.923222
+datum,NA,NA,NA,Latitude/Longitude Datum,Latitude/Longitude Datum,character,NA,NA
+elevation,NA,meter,real,NA,Elevation,numeric,0,4400
+map,NA,millimeter,real,NA,Mean Annual Precipitation,numeric,105,4250
+mat,NA,celsius,real,NA,Mean Annual Temperature,numeric,-12,27.258333
+clim_avg_yrs,NA,NA,NA,Climate averaging period,Climate averaging period,character,NA,NA
+tx_start,YYYY,NA,natural,NA,Treatment initiation,Date,1300,2019
+aspect_deg,NA,degree,real,NA,Site Aspect (degrees),numeric,0,360
+aspect_class,NA,NA,NA,NA,Site Aspect Class,factor,NA,NA
+slope,NA,degree,real,NA,Slope,numeric,0,29
+slope_shape,NA,NA,NA,NA,Slope Shape,factor,NA,NA
+drainage_class,NA,NA,NA,NA,Drainage Class,factor,NA,NA
+depth_water,NA,meter,natural,NA,Depth to Water Table,numeric,5,5
+parent_transport,NA,NA,NA,NA,parent_transport,factor,NA,NA
+parent_material,NA,NA,NA,NA,parent_material (NRCS),factor,NA,NA
+rock_chem,NA,NA,NA,NA,bedrock chemistry,factor,NA,NA
+land_cover,NA,NA,NA,NA,Land Cover Category,factor,NA,NA
+eco_region,NA,NA,NA,NA,Ecoregion (wwf),factor,NA,NA
+loc_texture_class,NA,NA,NA,NA,Soil texture class (NRCS),factor,NA,NA
+plant,NA,NA,NA,Dominant plant species,Dominant plant species,character,NA,NA
+lit_c,NA,dimensionless,real,NA,Fine Litterfall Carbon,numeric,14.65,8006.354371
+lit_n,NA,dimensionless,real,NA,Fine Litterfall Nitrogen,numeric,0.31,169.416059
+lit_p,NA,milligramPerGram,real,NA,Fine Litterfall phosphorus,numeric,0.214032,5.731635
+lit_cn,NA,dimensionless,real,NA,Fine Litterfall C:N,numeric,14.505208,166.21875
+lit_lig,NA,dimensionless,real,NA,aboveground litterfall lignin,numeric,13.59,38.2
+npp,NA,gramPerMeterSquaredPerYear,natural,NA,net primary productivity,numeric,585,1230
+anpp,NA,gramPerMeterSquaredPerYear,real,NA,aboveground net primary productivity,numeric,0,1141.95
+bnpp,NA,gramPerMeterSquaredPerYear,real,NA,belowground net primary productivity,numeric,0,1624.555
+bnpp_notes,NA,NA,NA,"bnpp notes (ingrowth, sequential coring, etc)","bnpp notes (ingrowth, sequential coring, etc)",character,NA,NA
+litterfall_anpp,NA,gramPerMeterSquaredPerYear,real,NA,litterfall annual net primary productivity,numeric,0,108996.9136
+agb,NA,gramPerMeterSquared,real,NA,aboveground biomass,numeric,0,63140
+bgb,NA,gramPerMeterSquared,real,NA,root biomass,numeric,-1.64,46000
+bgb_lowerdiam,NA,millimeter,real,NA,root biomass lower diameter cutoff,numeric,0,10
+bgb_upperdiam,NA,millimeter,real,NA,root biomass upper diameter cutoff,numeric,0.5,1000
+bgb_type,NA,NA,NA,root biomass type,root biomass type,character,NA,NA
+bgb_notes,NA,NA,NA,root biomass comments,root biomass comments,character,NA,NA
+bgb_c,NA,dimensionless,real,NA,root biomass C,numeric,0,66.47
+bgb_n,NA,dimensionless,real,NA,root biomass N,numeric,0.0039,2.8
+bgb_cn,NA,dimensionless,real,NA,root biomass C:N,numeric,13,284.4
+wood_lit_c,NA,gramPerMeterSquaredPerYear,natural,NA,Wood litterfall C flux,numeric,183,183
+align_1,NA,NA,NA,alignment notes for profile data 1,alignment notes for profile data 1,character,NA,NA
+align_2,NA,NA,NA,alignment notes for profile data 2,alignment notes for profile data 2,character,NA,NA
+loc_comments,NA,NA,NA,comments,comments,character,NA,NA
+time_series,NA,NA,NA,NA,includes time-series data,factor,NA,NA
+gradient,NA,NA,NA,NA,is a gradient study,factor,NA,NA
+experiments,NA,NA,NA,NA,includes experimental manipulations,factor,NA,NA
+control_id,NA,NA,NA,control samples identifier,control samples identifier,character,NA,NA
+number_treatments,NA,NA,NA,number of treatments,number of treatments,character,NA,NA
+merge_align,NA,NA,NA,NA,merging datafiles required? please add details to alignment notes,factor,NA,NA
+key_version,NA,NA,NA,NA,key file version (do not edit),factor,NA,NA
+L1,NA,NA,NA,Experimental Level 1 (top level),Experimental Level 1 (top level),character,NA,NA
+L1_level,NA,NA,NA,scope or type of experiment,scope or type of experiment,factor,NA,NA
+L2,NA,NA,NA,Experimental Level 2,Experimental Level 2,character,NA,NA
+L2_level,NA,NA,NA,scope or type of experiment,scope or type of experiment,factor,NA,NA
+L3,NA,NA,NA,Experimental Level 3,Experimental Level 3,character,NA,NA
+L3_level,NA,NA,NA,scope or type of experiment,scope or type of experiment,factor,NA,NA
+L4,NA,NA,NA,Experimental Level 4,Experimental Level 4,character,NA,NA
+L4_level,NA,NA,NA,scope or type of experiment,scope or type of experiment,factor,NA,NA
+L5,NA,NA,NA,Experimental Level 5,Experimental Level 5,character,NA,NA
+L5_level,NA,NA,NA,scope or type of experiment,scope or type of experiment,factor,NA,NA
+tx_L1,NA,NA,NA,Treatment_1_level,Treatment_1_level,character,NA,NA
+tx_L1_level,NA,NA,NA,scope or type of treatment,scope or type of treatment,factor,NA,NA
+tx_L2,NA,NA,NA,Treatment_2_level,Treatment_2_level,character,NA,NA
+tx_L2_level,NA,NA,NA,scope or type of treatment,scope or type of treatment,factor,NA,NA
+tx_L3,NA,NA,NA,Treatment_3_level,Treatment_3_level,character,NA,NA
+tx_L3_level,NA,NA,NA,scope or type of treatment,scope or type of treatment,factor,NA,NA
+tx_L4,NA,NA,NA,Treatment_4_level,Treatment_4_level,character,NA,NA
+tx_L4_level,NA,NA,NA,scope or type of treatment,scope or type of treatment,factor,NA,NA
+tx_L5,NA,NA,NA,Treatment_5_level,Treatment_5_level,character,NA,NA
+tx_L5_level,NA,NA,NA,scope or type of treatment,scope or type of treatment,factor,NA,NA
+tx_L6,NA,NA,NA,Treatment_6_level,Treatment_6_level,character,NA,NA
+tx_L6_level,NA,NA,NA,scope or type of treatment,scope or type of treatment,factor,NA,NA
+observation_date,NA,NA,NA,Observation Date,Observation Date,character,NA,NA
+veg_note_profile,NA,NA,NA,Profile Vegetation,Profile Vegetation,character,NA,NA
+lyr_c_tot,NA,dimensionless,real,NA,"Bulk Layer Total Carbon, not acid treated to remove inorganic C",numeric,0,60.69
+lyr_soc,NA,dimensionless,real,NA,"Bulk Layer Organic Carbon (CN analyzer) concentration, inorganic C removed or not present",numeric,0,69.19
+lyr_soc_stock,NA,dimensionless,real,NA,Bulk Layer Organic Carbon (CN analyzer) stock,numeric,0,47230
+lyr_loi,NA,dimensionless,real,NA,Bulk Layer Loss on Ignition,numeric,0,97.19
+lyr_som_WalkleyBlack,NA,dimensionless,real,NA,Bulk Layer OM (Walkley Balck),numeric,0.17,56.73
+lyr_n_tot,NA,dimensionless,real,NA,Bulk Layer Total Nitrogen concentration,numeric,0,3.62
+lyr_n_tot_stock,NA,dimensionless,real,NA,Bulk Layer Total Nitrogen stock,numeric,0,2405
+lyr_c_to_n,NA,dimensionless,real,NA,Bulk Layer C:N,numeric,0,304.2
+lyr_15n,NA,permil,real,NA,Bulk Layer δ15N,numeric,-28,10.5
+lyr_13c,NA,permil,real,NA,Bulk Layer δ13C,numeric,-32.36,6.9
+layer_top,NA,centimeter,real,NA,Layer Top,numeric,-2,284
+layer_bot,NA,centimeter,real,NA,Layer Bottom,numeric,-1,300
+layer_mid,NA,centimeter,real,NA,Layer middle,numeric,-1.5,450
+hzn,NA,NA,NA,Horizon,Horizon,character,NA,NA
+bd_samp,NA,gramsPerCubicCentimeter,real,NA,"Bulk Density, Coarse Fragments Removed",numeric,0.002836,5.00633
+bd_tot,NA,gramsPerCubicCentimeter,real,NA,Bulk Density With Coarse Fragments,numeric,0.21132,2.9
+ph_cacl,NA,dimensionless,real,NA,Soil pH CaCl2,numeric,2.49,9.7
+ph_h2o,NA,dimensionless,real,NA,Soil pH in water,numeric,2.95,10.2
+ph_other,NA,dimensionless,real,NA,Soil pH Other,numeric,3.01,9.54
+sand,NA,dimensionless,real,NA,Sand,numeric,0,98.9
+silt,NA,dimensionless,real,NA,Silt,numeric,-7.7,84
+clay,NA,dimensionless,real,NA,Clay,numeric,0,84.7
+coarse_frac,NA,dimensionless,real,NA,Coarse Fraction,numeric,0,88.24
+coarse_tot,NA,millimeter,natural,NA,Coarse Fraction Size Threshold Used,numeric,20,20
+profile_texture_class,NA,NA,NA,Texture Class,Texture Class,character,NA,NA
+caco3,NA,dimensionless,real,NA,Calcium Carbonate,numeric,0,104
+Ca,NA,millimolePerKilogram,real,NA,Calcium,numeric,0,247733
+Mg,NA,millimolePerKilogram,real,NA,Magnesium,numeric,0,3219
+K,NA,millimolePerKilogram,real,NA,Posassium,numeric,0,43239
+Na,NA,millimolePerKilogram,real,NA,Sodium,numeric,0,33215
+cat_exch,NA,centimoleH+PerKilogram,real,NA,Cation Exchange,numeric,6.688131,51.4
+base_sum,NA,milliequivalentPer100Gram,real,NA,Sum of Bases,numeric,0,249.7
+cec_sum,NA,milliequivalentPer100Gram,real,NA,Sum of Cation Exchange Capacity,numeric,0.78,18.58
+ecec,NA,milliequivalentPer100Gram,real,NA,Effective Cation Exchange Capacity,numeric,0.2,105.2
+bs,NA,dimensionless,real,NA,% Base Saturation,numeric,0,106.455696
+mbc_trans,NA,milligramPerGram,real,NA,"Microbial biomass C, reported Value After Transformation",numeric,0.039852,1.30348
+mbn_raw,NA,milligramPerGram,real,NA,"Microbial biomass N, raw value",numeric,0.000488,0.174977
+p_ex_1,NA,milligramPerGram,real,NA,Extractable Phosphorus_1,numeric,0,99
+p_ex_2,NA,milligramPerGram,real,NA,Extractable Phosphorus_2,numeric,0,1.3589
+p_ex_3,NA,milligramPerGram,whole,NA,Extractable Phosphorus_3,numeric,0,0
+p_ex_4,NA,milligramPerGram,real,NA,Extractable Phosphorus_4,numeric,0,0.6231
+n_min,NA,milligramPerGramPerDay,real,NA,Net N mineralization,numeric,-46.59952,212.4897
+soil_taxon,NA,NA,NA,Soil Taxonomy,Soil Taxonomy,character,NA,NA
+soil_series,NA,NA,NA,Soil Series,Soil Series,character,NA,NA
+comment_profile,NA,NA,NA,comments,comments,character,NA,NA
+lyr_al_py,NA,milligramPerGram,real,NA,Pyrophosphate Extractable Al,numeric,0.65,1.74
+lyr_si_py,NA,milligramPerGram,real,NA,Pyrophosphate Extractable Si,numeric,0.36,0.97
+lyr_fe_ox,NA,milligramPerGram,real,NA,Oxalate Extractable Fe,numeric,0,146.3
+lyr_al_ox,NA,milligramPerGram,real,NA,Oxalate Extractable Al,numeric,0,55.5
+lyr_si_ox,NA,milligramPerGram,real,NA,Oxalate Extractable Si,numeric,0,20.1
+lyr_fe_dith,NA,milligramPerGram,real,NA,Dithionite Extractable Fe,numeric,0,165
+lyr_al_dith,NA,milligramPerGram,whole,NA,Dithionite Extractable Al,numeric,0,31
+lyr_si_dith,NA,milligramPerGram,real,NA,Dithionite Extractable Si,numeric,0,7
+frc_scheme,NA,NA,NA,NA,Fractionation Scheme,factor,NA,NA
+frc_low_cutoff,NA,NA,NA,"Lower Cutoff Numerical (e.g., density, diameter, days, etc.)","Lower Cutoff Numerical (e.g., density, diameter, days, etc.)",character,NA,NA
+frc_high_cutoff,NA,NA,NA,"Upper Cutoff Numerical (e.g., density, diameter, days, etc.)","Upper Cutoff Numerical (e.g., density, diameter, days, etc.)",character,NA,NA
+frc_notes,NA,NA,NA,Fraction Notes,Fraction Notes,character,NA,NA
+frc_c_tot,NA,dimensionless,real,NA,Fraction Total Carbon,numeric,65.51,1311.49
+frc_oc,NA,dimensionless,real,NA,Fraction Organic Carbon,numeric,0.293,91.365
+frc_n_tot,NA,dimensionless,real,NA,Fraction Total Nitrogen,numeric,0.018,3.512
+frc_c_to_n,NA,dimensionless,real,NA,Fraction C:N,numeric,12.408,55.281
+bd_methods_notes,NA,NA,NA,Bulk Density Method or Other Notes,Bulk Density Method or Other Notes,character,NA,NA
+layer_thick_calc,NA,centimeter,real,NA,calculated soil layer thickness,numeric,-40,162
+lyr_soc_stock_calc,NA,dimensionless,real,NA,calculated soil layer standing stock of soil organic carbon,numeric,0,47230
+lyr_n_stock_calc,NA,dimensionless,real,NA,calculated soil layer standing stock of soil nitrogen,numeric,0,2405
+control_sample,NA,NA,NA,NA,"indicating if a sample is considered a control sample (i.e., not manipulated by experiment or treatment)",factor,NA,NA

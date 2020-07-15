@@ -1,0 +1,265 @@
+---
+title: "remlTemplate"
+author: "SRE"
+date: Sys.Date()
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# README
+
+Workflow for publishing the LTER SOM Working Group
+
+
+# libraries
+
+```{r libraries}
+library(EML)
+library(tidyverse)
+library(readxl)
+library(capeml)
+library(gioseml)
+library(googlesheets4)
+```
+
+# project details
+
+```{r dataset_details}
+projectid <- 521
+packageIdent <- "edi.521.1"
+```
+
+# somCompositeData
+
+In the following workflow, `var_names_and_order` is from `key-file-metadata.R`;
+this could be moved to a more convenient location since most of the
+funcationality in that file was critical but should not be required for future
+iterations.
+
+```{r compiled_data, eval=TRUE}
+
+soils_data_harmonization <- readRDS("somCompositeData_2020-06-22.rds")
+
+# check for empty columns
+soils_data_harmonization %>%
+  select_if(function(x) {
+    all(is.na(x)) }) %>%
+colnames()
+
+soils_data_harmonization <- soils_data_harmonization %>%
+  # vars not relevant to publications
+  select(
+    -google_id,
+    -header_row,
+    -NA_1,
+    -NA_2
+    ) %>%
+mutate(
+  frc_low_cutoff = as.character(frc_low_cutoff),
+  experiments = as.factor(experiments),
+  gradient = as.factor(gradient),
+  key_version = as.factor(key_version),
+  land_cover = as.factor(land_cover),
+  loc_texture_class = as.factor(loc_texture_class),
+  merge_align = as.factor(merge_align),
+  network = as.factor(network),
+  time_series = as.factor(time_series),
+  L5 = as.character(L5),
+  tx_L5 = as.character(tx_L5),
+  L1_level = as.factor(L1_level),
+  L2_level = as.factor(L2_level),
+  L3_level = as.factor(L3_level),
+  L4_level = as.factor(L4_level),
+  L5_level = as.factor(L5_level),
+  tx_L1_level = as.factor(tx_L1_level),
+  tx_L2_level = as.factor(tx_L2_level),
+  tx_L3_level = as.factor(tx_L3_level),
+  tx_L4_level = as.factor(tx_L4_level),
+  tx_L5_level = as.factor(tx_L5_level),
+  tx_L6_level = as.factor(tx_L6_level),
+  frc_scheme = as.factor(frc_scheme),
+  parent_material = as.factor(parent_material),
+  rock_chem = as.factor(rock_chem),
+  aspect_class = as.factor(aspect_class),
+  drainage_class = as.factor(drainage_class),
+  parent_transport = as.factor(parent_transport),
+  slope_shape = as.factor(slope_shape),
+  eco_region = as.factor(eco_region),
+  control_sample = as.factor(control_sample)
+  ) %>%
+# remove non-dates (HBR_W1, HBR_W5) from tx_start
+mutate(
+  tx_start = case_when(
+    tx_start > 10000 ~ NA_real_,
+    TRUE ~ tx_start
+  )
+  ) %>%
+select(
+  one_of(var_names_and_order),
+  everything()
+)
+
+write_attributes(soils_data_harmonization)
+write_factors(soils_data_harmonization)
+
+soils_data_harmonization_desc <- "an open-source synthesis of soil data from the DIRT, LTER, CZO, NEON, and NutNet networks"
+
+soils_data_harmonization_DT <- create_dataTable(
+  dfname = soils_data_harmonization,
+  description = soils_data_harmonization_desc)
+
+```
+
+# title
+
+```{r title}
+
+title <- "SOils DAta Harmonization database (SoDaH): an open-source synthesis of soil data from research networks"
+```
+
+# people
+
+See the gioseml package for examples of creating people resources from scratch.
+
+```{r people}
+
+# creators - required
+# metadataProvider - required
+
+# see people.R
+```
+
+# keywords
+
+```{r keywords}
+
+# CAP IRTs for reference (be sure to include these as appropriate):
+# https://sustainability.asu.edu/caplter/research/
+
+write_keywords()
+```
+
+# methods
+
+Use this extended approach of developing methods if provenance data are required
+or there are multiple methods files, otherwise the `create_dateset()` function
+will look for a methods.md file in the working directory (or a file path and
+name can be passed).
+
+```{r methods}
+
+library(EDIutils)
+
+# methods from file tagged as markdown
+main <- list(description = read_markdown("methods.md"))
+
+enhancedMethods <- EML::eml$methods(methodStep = list(main, provenance))
+
+```
+
+# coverages
+
+```{r coverages}
+
+# begindate <- format(min(runoff_chemistry$runoff_datetime), "%Y-%m-%d")
+# enddate <- format(max(runoff_chemistry$runoff_datetime), "%Y-%m-%d")
+# geographicDescription <- "CAP LTER study area"
+# coverage <- set_coverage(
+#   begin = "2014-09-01",
+#   end = "2015-03-30",
+#   geographicDescription = geographicDescription,
+#   west = -112.100, east = -111.877,
+#   north = +33.608, south = +33.328)
+
+# coverage <- geoCoverage
+
+coverage <- EML::eml$coverage(
+  geographicCoverage = geoCoverage
+)
+
+```
+
+# dataset
+
+```{r construct-dataset}
+
+# optionally, provide: scope, abstract, methods, keywords, publication date
+dataset <- create_dataset(scope = "som")
+```
+
+# dataTable
+
+```{r dataSet$dataTable}
+
+# add dataTables if relevant
+
+print(ls(pattern = "_DT"))
+
+if (length(ls(pattern = "_DT")) > 0) {
+  
+  listOfDataTables <- lapply(ls(pattern = "_DT"), function(DT) { get(DT) } )
+  
+  dataset$dataTable  <- listOfDataTables  
+  
+}
+
+# or add manually
+# dataset$dataTable <- list(dataTableOne, dataTableTwo)
+
+```
+
+# custom units
+
+```{r custom-units, eval=FALSE}
+
+custom_units <- rbind(
+  data.frame(id = "milligramPerGram",
+    unitType = "massPerMass",
+    parentSI = "gramsPerGram",
+    multiplierToSI = 0.001,
+    description = "millgram of element per kilogram of material"),
+  data.frame(id = "centimoleH+PerKilogram",
+    unitType = "cation exchange capacity",
+    parentSI = "unknown",
+    multiplierToSI = "unknown",
+    description = "centimole hydrogen ions per kilogram"),
+  data.frame(id = "milliequivalentPer100Gram",
+    unitType = "cation exchange capacity",
+    parentSI = "unknown",
+    multiplierToSI = "unknown",
+    description = "cation exchange capacity in milliequivalents per 100 gram"),
+  data.frame(id = "milligramPerGramPerDay",
+    unitType = "unknown",
+    parentSI = "unknown",
+    multiplierToSI = "unknown",
+    description = "millgram of element per gram of material per day")
+)
+
+unitList <- set_unitList(custom_units,
+  as_metadata = TRUE)
+
+```
+
+# eml
+
+```{r construct_eml, eval=TRUE}
+
+eml <- create_eml()
+```
+
+```{r write_eml}
+
+# write the eml to file
+write_eml(eml, paste0(packageIdent, ".xml"))
+```
+
+# additional processing
+
+Duplicate ids (e.g., "CWT-LTER") exist owing to the extensive provenance. As a
+result, these must be removed after generating the EML. From vim, source
+remove-duplicate-ids after construction of EML.
+
+UPDATE 2020-07-15: after converting all creator ids to NULL in the extract_prov
+and provenance_and_geography workflow, this additional processing was no longer
+required with the remove-duplicate-ids script moved to archive.
