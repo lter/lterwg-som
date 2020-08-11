@@ -46,7 +46,7 @@ dupes2 <- ltr_pertrap %>%
 ltr_pertrap_mod <- ltr_pertrap[!duplicated(ltr_pertrap$trapID, fromLast = TRUE),]
 
 ## Combine data frames
-ltr_fieldAndTrap <- ltr_field_mod %>%
+ltr_fieldAndTrap <- ltr_fielddata %>%
   left_join(ltr_pertrap_mod, by= c("namedLocation", 
                                    "trapID", 
                                    "domainID", 
