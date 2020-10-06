@@ -1,5 +1,6 @@
 .httr-oauth
 .Rproj.user
+<<<<<<< Updated upstream
 .rds
 .png
 .jpg
@@ -9,3 +10,12 @@
 .csv
 .DS_Store
 .Rhistory
+=======
+# MAC
+*.DS_Store
+lterwg-som.Rproj
+# tarball
+*.rds
+
+data-processing/local_keyV2_updater.R
+>>>>>>> Stashed changes
