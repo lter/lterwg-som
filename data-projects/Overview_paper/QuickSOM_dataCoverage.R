@@ -137,7 +137,7 @@ timePlot
 depthPlot<-ggplot(data.plot, 
                 aes(x=site_code, y=layer_bot), na.omit=F)+
   geom_point(aes(color=network), show.legend = FALSE, size=1) +
-  xlab("Site") + ylab("Depth") +
+  xlab("Site") + ylab("Depth (cm)") +
   scale_y_reverse() +
   scale_x_discrete() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=6)) +
