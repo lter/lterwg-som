@@ -2,7 +2,7 @@
 # This file was written by JAM Moore 12-18-2020.
 # Data are publicly accessible at Environmental Data Initiative https://portal-s.edirepository.org/nis/codeGeneration?packageId=edi.521.1&statisticalFileType=r
 # Once downloaded, the data file object is called "dt1" with 293592 obs. and 157 variables.
-# Alternatively: Proceed directly to line #159/Analysis Section and read in the CSV.
+# Alternatively: Proceed directly to line #159/Analysis Section and read in the CSV that is available in the Supplementary files.
 
 library(lmerTest) 
 library(sjstats) 
