@@ -313,6 +313,8 @@ somNEONMegaSoilRoot_wholeprofilestats_NoOut <-somNEONMegaSoilRoot_wholeprofilest
 
 
 
+
+
 #### AVNI'S AGU TALK
 ### Results for Objective 1: Whole profile summed SOC correlated with Roots (whole profile summed) and other covariates
 null.mod <- lmer(data=somNEONMegaSoilRoot_wholeprofilestats_NoOut, lyr_soc_stock_calc_sum ~ (1|layer_bot_max))
@@ -588,7 +590,7 @@ min.rss.soc <- function(beta){
 }
 
 
-#a loop for calculating betas for each site **O horizon**
+#a loop for calculating betas for each site **M horizon**
 results.list = list()
 for (site in somNEONMegaSoilRootSelSumDepth_M$site_code) {
   
