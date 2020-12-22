@@ -691,22 +691,27 @@ ggsave(plot=beta.landcov.M, file="beta.landcov.M.jpeg", dpi=300)
   #lhs <- tgc_site$rootfrac_cumsum
   #rhs <- 1-beta_site_roots^tgc_site$layer_bot
   #site_roots <- lm(lhs ~ rhs)
+somNEONMega1 <-  somNEONMegaSoilRootSelSumDepth %>%
+  left_join(select(somNEON_mineral_wholeprofile, site_code, map), by="site_code") %>%
+  mutate(site_code = as.factor(site_code),
+       site_code = fct_reorder(site_code, map.y))
 
-beta.site1<-ggplot(somNEONMega1, 
-         aes(x = socfrac_cumsum, 
+#### Figure S1 ####
+beta.site1<-somNEONMega1 %>% 
+  ggplot(aes(x = socfrac_cumsum, 
              y = layer_bot )) +
     geom_point(pch = 21, aes(color=land_cover)) + 
     geom_point(aes(x=rootfrac_cumsum, color=land_cover), pch=19)+
     geom_line(aes(x=rootfrac_cumsum, color=land_cover), lty="solid")+
     geom_line(aes(x=socfrac_cumsum, color=land_cover), lty="dashed")+
-    scale_color_manual(values=c("darkgreen","royalblue2","darkorchid"))+ 
+    scale_color_manual(values=c("darkorange3", "darkgreen","royalblue2","darkorchid"))+ 
     scale_y_reverse() + # puts 0 at the top
     xlab("Proportion accumulated")+
     ylab("Soil depth (cm)")+
-    guides(color=guide_legend(title="Land cover", title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
-    facet_wrap(~ site_code) +
+    guides(color=guide_legend(title="Land cover", title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0), ncol=4))+
+    facet_wrap(~ reorder(site_code, map.y)) +
     theme_bw()+
-    theme(legend.position=c(0.9,0.07), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
+    theme(legend.position=c(0.65,0.05), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
 beta.site1
 ggsave(plot=beta.site1, file="beta.site1.jpeg",dpi=300)
 
