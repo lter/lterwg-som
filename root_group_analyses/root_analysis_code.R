@@ -713,26 +713,7 @@ beta.site1<-somNEONMega1 %>%
     theme_bw()+
     theme(legend.position=c(0.65,0.05), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
 beta.site1
-ggsave(plot=beta.site1, file="beta.site1.jpeg",dpi=300)
-
-beta.site2<-ggplot(somNEONMega2, 
-                   aes(x = socfrac_cumsum, 
-                       y = layer_bot )) +
-  geom_point(pch = 21, aes(color=land_cover)) + 
-  geom_point(aes(x=rootfrac_cumsum, color=land_cover), pch=19)+
-  geom_line(aes(x=rootfrac_cumsum, color=land_cover), lty="solid")+
-  geom_line(aes(x=socfrac_cumsum, color=land_cover), lty="dashed")+
-  scale_color_manual(values=c("darkorange3", "darkgreen","royalblue2","darkorchid"))+
-  scale_y_reverse() + # puts 0 at the top
-  xlab("Proportion accumulated")+
-  ylab("Soil depth (cm)")+
-  guides(color=guide_legend(title="Land cover", ncol=2,title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
-  facet_wrap(~ site_code) +
-  theme_bw()+
-  theme(legend.position=c(0.8,0.07), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12))
-beta.site2
-df<-as.data.frame(ggplot_build(beta.site2)$data) #to check ggplot's color scheme
-ggsave(plot=beta.site2, file="beta.site2.jpeg",dpi=300)
+ggsave(plot=beta.site1, file="FigS1.jpeg",dpi=300) 
 
 
 somNEONMegaSoilRootSelSumDepth_noshcult<-somNEONMegaSoilRootSelSumDepth %>% filter(land_cover %in% c("forest","rangeland/grassland"))
