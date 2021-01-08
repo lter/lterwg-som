@@ -200,8 +200,10 @@ AIC(reduced.mod2)
 performance::r2(reduced.mod2)
 
 #Objective 2: Horizon-specific whole profile sums.
-somNEON_organic_wholeprofile<-read.csv("somNEON_organic_wholeprofile")
+somNEON_organic_wholeprofile<-read.csv("somNEON_organic_wholeprofile.csv")
+somNEON_organic_wholeprofile <- somNEON_organic_wholeprofile %>% filter(lyr_soc_stock_calc_sum>1)
 somNEON_mineral_wholeprofile<-read.csv("somNEON_mineral_wholeprofile.csv")
+somNEON_mineral_wholeprofile<- somNEON_mineral_wholeprofile %>% filter(!bgb_c_stock_sum==0 & !land_cover=="cultivated")
 
 #Mineral horizon models. Results are reported in Table S2a. 
 null.mod <- lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ (1|layer_bot_max))
@@ -210,11 +212,11 @@ full.mod<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~
                  bgb_c_stock_sum + mat + map + clay + land_cover + (1|layer_bot_max))
 
 reduced.mod<-lmer(data=somNEON_mineral_wholeprofile, lyr_soc_stock_calc_sum ~ 
-                    bgb_c_stock_sum +  map  + (1|layer_bot_max)) 
+                    bgb_c_stock_sum +   map  + (1|layer_bot_max)) 
 summary(full.mod)
 Anova(full.mod)
 anova(full.mod, null.mod)
-AIC(full.mod)
+AIC(reduced.mod)
 performance::r2(reduced.mod)
 vif(full.mod)
 
@@ -224,7 +226,7 @@ null.mod <- lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ (1|
 
 full.mod<-lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ 
                  bgb_c_stock_sum + mat + land_cover + map + (1|layer_bot_max))
-reduced.mod<-lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ land_cover + 
+reduced.mod<-lmer(data=somNEON_organic_wholeprofile, lyr_soc_stock_calc_sum ~ land_cover  + 
                     (1|layer_bot_max))
 
 summary(reduced.mod)

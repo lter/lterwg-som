@@ -715,17 +715,19 @@ beta.site1<-somNEONMega1 %>%
 beta.site1
 ggsave(plot=beta.site1, file="FigS1.jpeg",dpi=300) 
 
-
-somNEONMegaSoilRootSelSumDepth_noshcult<-somNEONMegaSoilRootSelSumDepth %>% filter(land_cover %in% c("forest","rangeland/grassland"))
+#### Fig S2 ####
+somNEONMegaSoilRootSelSumDepth_noshcult<-somNEONMegaSoilRootSelSumDepth %>% 
+  filter(land_cover %in% c("forest","rangeland/grassland")) %>%
+  mutate(land_cover = factor(land_cover, levels=c("forest", "rangeland/grassland"), labels=c("Forest","Rangeland/Grassland")))
 segments<-data.frame(x=c(0.1,0.1,0,0,0),xend=c(0.2,0.2,0,0,0),y=c(175,200,0,0,0),yend=c(175,200,0,0,0),land_cover=factor("forest",levels=c("forest","rangeland/grassland")))
 beta.summ<-ggplot(somNEONMegaSoilRootSelSumDepth_noshcult, 
                   aes(x = socfrac_cumsum, 
-                      y = layer_bot )) +
+                      y = layer_top )) +
   geom_point(color="black", pch = 21, size=1) + 
   geom_point(aes(x=rootfrac_cumsum),color="black", pch=19, size=1)+
   #geom_smooth(aes(x=socfrac_cumsum, group=site_code), color="gray",lty="dashed", span=1.5)+
-  geom_smooth(data=subset(somNEONMegaSoilRootSelSumDepth_noshcult, land_cover=="rangeland/grassland"), aes(x=rootfrac_cumsum), lty="solid", span=1.5)+
-  geom_smooth(data=subset(somNEONMegaSoilRootSelSumDepth_noshcult, land_cover=="rangeland/grassland"), aes(x=socfrac_cumsum), lty="dashed", span=1.5)+
+  geom_smooth(data=subset(somNEONMegaSoilRootSelSumDepth_noshcult, land_cover=="Rangeland/Grassland"), aes(x=rootfrac_cumsum), lty="solid", span=1.5)+
+  geom_smooth(data=subset(somNEONMegaSoilRootSelSumDepth_noshcult, land_cover=="Rangeland/Grassland"), aes(x=socfrac_cumsum), lty="dashed", span=1.5)+
   #scale_color_manual(values=c("darkgreen","royalblue2"))+
   scale_y_reverse(limits=c(200,0)) + # puts 0 at the top
   xlab("Proportion accumulated")+
@@ -736,17 +738,18 @@ beta.summ<-ggplot(somNEONMegaSoilRootSelSumDepth_noshcult,
   annotate("text",label="Roots", x=0.25, y=175,hjust=0)+
   annotate("point", x=0.03,y=200, pch=21)+
   annotate("point", x=0.03,y=175, pch=19)+
-  geom_text(data=beta.stats, aes(x=x,y=y.soc,label=mean.soc), hjust=0)+
-  geom_text(data=beta.stats, aes(x=x,y=y.roots,label=mean.roots), hjust=0)+
+  #geom_text(data=beta.stats, aes(x=x,y=y.soc,label=mean.soc), hjust=0)+
+  #geom_text(data=beta.stats, aes(x=x,y=y.roots,label=mean.roots), hjust=0)+
   guides(color=guide_legend(title="Land cover", ncol=1,title.theme = element_text(size=12, angle=0), label.theme = element_text(size=12, angle=0)))+
   facet_wrap(~ land_cover) +
   theme_bw()+
   theme(legend.position="none", panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.border=element_rect(fill=NA, color="black"),panel.background=element_rect(fill="white"),axis.title=element_text(size=14),axis.text=element_text(size=12),legend.title = element_text(size=12),strip.text = element_text(size=16))
 beta.summ
-ggsave(plot=beta.summ, file="beta_landcov_summary_v4.jpeg",dpi=300)
+ggsave(plot=beta.summ, file="Fig_S2.jpeg",dpi=300)
 
 
-#Table S3a: mixed models for beta, organic+mineral, forest and grasslands only
+#### Table S3a ####
+# mixed models for beta, organic+mineral, forest and grasslands only
 beta.all.nocult<-filter(beta.all, !land_cover %in% c("cultivated","shrubland"))
 beta.all.for<-filter(beta.all, land_cover=="forest")
 beta.all.gr<-filter(beta.all, land_cover=="rangeland/grassland")
@@ -767,7 +770,8 @@ performance::r2(mod)
 car::vif(full.mod)
 anova(null.mod, mod)
 
-#Table S3b: mixed models for Betas in mineral horizons only,forest and grasslands only
+####Table S3b####
+#mixed models for Betas in mineral horizons only,forest and grasslands only
 beta.m.nocult<-filter(beta.all.M, !land_cover %in% c("cultivated","shrubland"))
 beta.m.for<-filter(beta.all.M, land_cover=="forest")
 beta.m.gr<-filter(beta.all.M, land_cover=="rangeland/grassland")
